@@ -19,7 +19,9 @@
 import pygtk
 import gtk
 import gtk.glade
+import pango
 import iet_session
+import iet_volume
 
 class IETView:
     def __init__(self):
@@ -37,9 +39,12 @@ class IETView:
         self.iets.parse('/home/jpanczyk/proc_session')
         
         for session in self.iets.sessions:
-            piter = self.treestore.append(None, ['%d %s' % (session.tid, session.name)])
+            piter = self.treestore.append(None, [ session.name ])
             for client in session.session_list:
-                self.treestore.append(piter, ['%d %s %s %s' % (client.sid, client.initiator, client.ip, client.state)])
+                self.treestore.append(piter, [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
+
+        self.ietv = iet_volume.target_volumes()
+        self.ietv.parse('/home/jpanczyk/proc_volume') 
 
         self.treeview = self.wTree.get_widget('session_tree')
 
@@ -65,17 +70,55 @@ class IETView:
         if len(path) == 1:
             x = path[0]
             buf = gtk.TextBuffer()
-            buf.set_text("%d %s" % (self.iets.sessions[x].tid, self.iets.sessions[x].name))
+            buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
+            buf.insert(buf.get_end_iter(), str(self.iets.sessions[x].tid) + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
+            buf.insert(buf.get_end_iter(), self.iets.sessions[x].name + '\n')
+
+            tid = self.iets.sessions[x].tid
+            target = self.ietv.volumes[tid]
+            luns = target.luns.keys()
+            luns.sort()
+            for lk in luns:
+                lun = target.luns[lk]
+
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 'LUN: ', 'Bold')
+                buf.insert(buf.get_end_iter(), str(lun.lun) + '\n')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 'Path: ', 'Bold')
+                buf.insert(buf.get_end_iter(), lun.path + '\n')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 'State: ', 'Bold')
+                buf.insert(buf.get_end_iter(), str(lun.state) + '\n')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 'IO Type: ', 'Bold')
+                buf.insert(buf.get_end_iter(), lun.iotype + '\n')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 'IO Mode: ', 'Bold')
+                buf.insert(buf.get_end_iter(), lun.iomode + '\n')
+
+
             self.textview.set_buffer(buf)
         else:
             x, y = path
             x, y = int(x), int(y)
+            client = self.iets.sessions[x].session_list[y]
             buf = gtk.TextBuffer()
-            buf.set_text("%d %s" % (self.iets.sessions[x].session_list[y].sid, self.iets.sessions[x].session_list[y].initiator))
+            buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'SID: ', 'Bold')
+            buf.insert(buf.get_end_iter(), str(client.sid) + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Initiator Name: ', 'Bold')
+            buf.insert(buf.get_end_iter(), client.initiator + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'CID: ', 'Bold')
+            buf.insert(buf.get_end_iter(), str(client.cid) + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'IP: ', 'Bold')
+            buf.insert(buf.get_end_iter(), client.ip + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'State: ', 'Bold')
+            buf.insert(buf.get_end_iter(), client.state + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'HD: ', 'Bold')
+            buf.insert(buf.get_end_iter(), client.hd + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'DD: ', 'Bold')
+            buf.insert(buf.get_end_iter(), client.dd + '\n')
             self.textview.set_buffer(buf)
 
         
-
 if __name__ == '__main__':
     iet_view = IETView()
     gtk.main()
