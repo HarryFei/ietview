@@ -33,16 +33,17 @@ class IETView:
 
         self.treestore = gtk.TreeStore(str)
 
-        iets = iet_session.iet_sessions()
-        iets.parse('/home/jpanczyk/proc_session')
-        iets.dump()
+        self.iets = iet_session.iet_sessions()
+        self.iets.parse('/home/jpanczyk/proc_session')
         
-        for parent in range(4):
-            piter = self.treestore.append(None, ['parent %i' % parent])
-            for child in range(3):
-                self.treestore.append(piter, ['child %i of parent %i' % (child, parent)])
+        for session in self.iets.sessions:
+            piter = self.treestore.append(None, ['%d %s' % (session.tid, session.name)])
+            for client in session.session_list:
+                self.treestore.append(piter, ['%d %s %s %s' % (client.sid, client.initiator, client.ip, client.state)])
 
         self.treeview = self.wTree.get_widget('session_tree')
+
+        self.treeview.connect('cursor-changed', self.cursor_changed)
         self.treeview.set_model(self.treestore)
         self.tvcolumn = gtk.TreeViewColumn('iSCSI Targets')
         self.treeview.append_column(self.tvcolumn)
@@ -51,7 +52,29 @@ class IETView:
         self.tvcolumn.add_attribute(self.cell, 'text', 0)
         self.treeview.set_search_column(0)
         self.tvcolumn.set_sort_column_id(0)
-        self.treeview.set_reorderable(True)
+        self.treeview.set_reorderable(False)
+
+        self.textview = self.wTree.get_widget('session_view')
+
+
+    def cursor_changed(self, treeview):
+        path, col = treeview.get_cursor()
+        
+        if path == None: return
+
+        if len(path) == 1:
+            x = path[0]
+            buf = gtk.TextBuffer()
+            buf.set_text("%d %s" % (self.iets.sessions[x].tid, self.iets.sessions[x].name))
+            self.textview.set_buffer(buf)
+        else:
+            x, y = path
+            x, y = int(x), int(y)
+            buf = gtk.TextBuffer()
+            buf.set_text("%d %s" % (self.iets.sessions[x].session_list[y].sid, self.iets.sessions[x].session_list[y].initiator))
+            self.textview.set_buffer(buf)
+
+        
 
 if __name__ == '__main__':
     iet_view = IETView()
