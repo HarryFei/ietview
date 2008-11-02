@@ -67,7 +67,51 @@ class IETView:
         self.treeview.set_reorderable(False)
 
         self.textview = self.wTree.get_widget('session_view')
+        self.edit_button = self.wTree.get_widget('target_edit')
+        self.edit_button.set_sensitive(False)
+        self.edit_button.connect('clicked', self.addedit_target, 0)
+        self.delete_button = self.wTree.get_widget('target_delete')
+        self.delete_button.set_sensitive(False)
+        self.delete_button.connect('clicked', self.delete_target)
 
+    def delete_target(self, button):
+        path, col = self.treeview.get_cursor()
+        if path == None: return
+        if len(path) != 1: return
+
+        x = path[0]
+
+        delete_dialog = self.wTree.get_widget('delete_dialog')
+        response = delete_dialog.run()
+
+        print response
+
+        delete_dialog.hide()
+
+    def addedit_target(self, button, addedit):
+        path, col = self.treeview.get_cursor()
+        if path == None: return
+        if len(path) != 1: return
+
+        x = path[0]
+
+        addedit_dialog = self.wTree.get_widget('addedit_dialog')
+        response = addedit_dialog.run()
+
+        addedit_dialog.hide()
+
+        if response == gtk.RESPONSE_NONE or response == 0: return
+
+        tname = self.wTree.get_widget('addedit_tname')
+        tpath = self.wTree.get_widget('addedit_tpath')
+        active = self.wTree.get_widget('addedit_active')
+        saved = self.wTree.get_widget('addedit_saved')
+
+        print 'Operation:', ( 'Edit', 'Add' )[addedit]
+        print 'Target Name:', tname.get_text()
+        print 'Target Path:', tpath.get_text()
+        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
+        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
 
     def cursor_changed(self, treeview):
         path, col = treeview.get_cursor()
@@ -101,21 +145,24 @@ class IETView:
                 buf.insert_with_tags_by_name(buf.get_end_iter(), 'IO Mode: ', 'Bold')
                 buf.insert(buf.get_end_iter(), lun.iomode + '\n')
 
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
-
-            if self.iets.sessions[x].name in self.iet_allow.initiators:
-                buf.insert(buf.get_end_iter(), str(self.iet_allow.initiators[self.iets.sessions[x].name]) + '\n')
-            else:
-                buf.insert(buf.get_end_iter(), '\n')
-
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
 
             if self.iets.sessions[x].name in self.iet_deny.initiators:
                 buf.insert(buf.get_end_iter(), str(self.iet_deny.initiators[self.iets.sessions[x].name]) + '\n')
             else:
                 buf.insert(buf.get_end_iter(), '\n')
+
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
+
+            if self.iets.sessions[x].name in self.iet_allow.initiators:
+                buf.insert(buf.get_end_iter(), str(self.iet_allow.initiators[self.iets.sessions[x].name]) + '\n')
+            else:
+                buf.insert(buf.get_end_iter(), '\n')
             
             self.textview.set_buffer(buf)
+
+            self.delete_button.set_sensitive(True)
+            self.edit_button.set_sensitive(True)
         else:
             x, y = path
             x, y = int(x), int(y)
@@ -138,6 +185,8 @@ class IETView:
             buf.insert(buf.get_end_iter(), client.dd + '\n')
             self.textview.set_buffer(buf)
 
+            self.delete_button.set_sensitive(False)
+            self.edit_button.set_sensitive(False)
         
 if __name__ == '__main__':
     iet_view = IETView()
