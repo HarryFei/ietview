@@ -22,6 +22,7 @@ import gtk.glade
 import pango
 import iet_session
 import iet_volume
+import iet_allowdeny
 
 class IETView:
     def __init__(self):
@@ -46,6 +47,12 @@ class IETView:
         self.ietv = iet_volume.target_volumes()
         self.ietv.parse('/home/jpanczyk/proc_volume') 
 
+        self.iet_allow = iet_allowdeny.iet_allowdeny()
+        self.iet_allow.parse('/home/jpanczyk/iet_allow')
+
+        self.iet_deny = iet_allowdeny.iet_allowdeny()
+        self.iet_deny.parse('/home/jpanczyk/iet_deny')
+
         self.treeview = self.wTree.get_widget('session_tree')
 
         self.treeview.connect('cursor-changed', self.cursor_changed)
@@ -56,7 +63,7 @@ class IETView:
         self.tvcolumn.pack_start(self.cell, True)
         self.tvcolumn.add_attribute(self.cell, 'text', 0)
         self.treeview.set_search_column(0)
-        self.tvcolumn.set_sort_column_id(0)
+        self.tvcolumn.set_sort_column_id(-1)
         self.treeview.set_reorderable(False)
 
         self.textview = self.wTree.get_widget('session_view')
@@ -94,7 +101,20 @@ class IETView:
                 buf.insert_with_tags_by_name(buf.get_end_iter(), 'IO Mode: ', 'Bold')
                 buf.insert(buf.get_end_iter(), lun.iomode + '\n')
 
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
 
+            if self.iets.sessions[x].name in self.iet_allow.initiators:
+                buf.insert(buf.get_end_iter(), str(self.iet_allow.initiators[self.iets.sessions[x].name]) + '\n')
+            else:
+                buf.insert(buf.get_end_iter(), '\n')
+
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
+
+            if self.iets.sessions[x].name in self.iet_deny.initiators:
+                buf.insert(buf.get_end_iter(), str(self.iet_deny.initiators[self.iets.sessions[x].name]) + '\n')
+            else:
+                buf.insert(buf.get_end_iter(), '\n')
+            
             self.textview.set_buffer(buf)
         else:
             x, y = path
