@@ -23,6 +23,7 @@ import pango
 import iet_session
 import iet_volume
 import iet_allowdeny
+import ietadm
 
 class IETView:
     def __init__(self):
@@ -37,7 +38,7 @@ class IETView:
         self.treestore = gtk.TreeStore(str)
 
         self.iets = iet_session.iet_sessions()
-        self.iets.parse('/home/jpanczyk/proc_session')
+        self.iets.parse('/proc/net/iet/session')
         
         for session in self.iets.sessions:
             piter = self.treestore.append(None, [ session.name ])
@@ -45,13 +46,13 @@ class IETView:
                 self.treestore.append(piter, [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
 
         self.ietv = iet_volume.target_volumes()
-        self.ietv.parse('/home/jpanczyk/proc_volume') 
+        self.ietv.parse('/proc/net/iet/volume') 
 
         self.iet_allow = iet_allowdeny.iet_allowdeny()
-        self.iet_allow.parse('/home/jpanczyk/iet_allow')
+        self.iet_allow.parse('/etc/initiators.allow')
 
         self.iet_deny = iet_allowdeny.iet_allowdeny()
-        self.iet_deny.parse('/home/jpanczyk/iet_deny')
+        self.iet_deny.parse('/etc/initiators.deny')
 
         self.treeview = self.wTree.get_widget('session_tree')
 
@@ -67,9 +68,11 @@ class IETView:
         self.treeview.set_reorderable(False)
 
         self.textview = self.wTree.get_widget('session_view')
+        self.add_button = self.wTree.get_widget('target_add')
+        self.add_button.connect('clicked', self.add_target)
         self.edit_button = self.wTree.get_widget('target_edit')
         self.edit_button.set_sensitive(False)
-        self.edit_button.connect('clicked', self.addedit_target, 0)
+        self.edit_button.connect('clicked', self.edit_target)
         self.delete_button = self.wTree.get_widget('target_delete')
         self.delete_button.set_sensitive(False)
         self.delete_button.connect('clicked', self.delete_target)
@@ -88,7 +91,41 @@ class IETView:
 
         delete_dialog.hide()
 
-    def addedit_target(self, button, addedit):
+    def add_target(self, button):
+        addedit_dialog = self.wTree.get_widget('addedit_dialog')
+
+        tname = self.wTree.get_widget('addedit_tname')
+        tpath = self.wTree.get_widget('addedit_tpath')
+        active = self.wTree.get_widget('addedit_active')
+        saved = self.wTree.get_widget('addedit_saved')
+
+        tname.set_text('')
+        tpath.set_text('')
+        active.set_active(True)
+        saved.set_active(True)
+
+        response = addedit_dialog.run()
+
+        addedit_dialog.hide()
+
+        if response == gtk.RESPONSE_NONE or response == 0: return
+
+        print 'Operation:', 'Add'
+        print 'Target Name:', tname.get_text()
+        print 'Target Path:', tpath.get_text()
+        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
+        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
+
+        tid = len(self.iets.sessions) + 1
+        lun = 0
+        print 'Tid:', tid
+        print 'Lun:', lun
+
+        adm = ietadm.ietadm()
+        adm.add_target(tid, tname.get_text())
+        adm.add_lun(tid, lun, tpath.get_text())
+ 
+    def edit_target(self, button):
         path, col = self.treeview.get_cursor()
         if path == None: return
         if len(path) != 1: return
@@ -107,7 +144,7 @@ class IETView:
         active = self.wTree.get_widget('addedit_active')
         saved = self.wTree.get_widget('addedit_saved')
 
-        print 'Operation:', ( 'Edit', 'Add' )[addedit]
+        print 'Operation:', 'Edit'
         print 'Target Name:', tname.get_text()
         print 'Target Path:', tpath.get_text()
         print 'Active:', ( 'No', 'Yes' )[active.get_active()]
@@ -158,7 +195,16 @@ class IETView:
                 buf.insert(buf.get_end_iter(), str(self.iet_allow.initiators[self.iets.sessions[x].name]) + '\n')
             else:
                 buf.insert(buf.get_end_iter(), '\n')
-            
+
+            adm = ietadm.ietadm()
+            params = {}
+            adm.show(params, self.iets.sessions[x].tid)
+            keys = params.keys()
+            keys.sort()
+            for key in keys:
+                buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+                buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
+
             self.textview.set_buffer(buf)
 
             self.delete_button.set_sensitive(True)
@@ -183,6 +229,17 @@ class IETView:
             buf.insert(buf.get_end_iter(), client.hd + '\n')
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'DD: ', 'Bold')
             buf.insert(buf.get_end_iter(), client.dd + '\n')
+
+            adm = ietadm.ietadm()
+            params = {}
+            adm.show(params, self.iets.sessions[x].tid, client.sid)
+            keys = params.keys()
+            keys.sort()
+            for key in keys:
+                buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+                buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
+
+
             self.textview.set_buffer(buf)
 
             self.delete_button.set_sensitive(False)
