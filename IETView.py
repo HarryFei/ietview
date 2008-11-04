@@ -37,23 +37,7 @@ class IETView:
 
         self.treestore = gtk.TreeStore(str)
 
-        self.iets = iet_session.iet_sessions()
-        self.iets.parse('/proc/net/iet/session')
-        
-        for session in self.iets.sessions:
-            piter = self.treestore.append(None, [ session.name ])
-            for client in session.session_list:
-                self.treestore.append(piter, [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
-
-        self.ietv = iet_volume.target_volumes()
-        self.ietv.parse('/proc/net/iet/volume') 
-
-        self.iet_allow = iet_allowdeny.iet_allowdeny()
-        self.iet_allow.parse('/etc/initiators.allow')
-
-        self.iet_deny = iet_allowdeny.iet_allowdeny()
-        self.iet_deny.parse('/etc/initiators.deny')
-
+        self.reload_sessions()
         self.treeview = self.wTree.get_widget('session_tree')
 
         self.treeview.connect('cursor-changed', self.cursor_changed)
@@ -77,6 +61,26 @@ class IETView:
         self.delete_button.set_sensitive(False)
         self.delete_button.connect('clicked', self.delete_target)
 
+    def reload_sessions(self):
+        self.treestore.clear()
+
+        self.iets = iet_session.iet_sessions()
+        self.iets.parse('/proc/net/iet/session')
+        
+        for session in self.iets.sessions:
+            piter = self.treestore.append(None, [ session.name ])
+            for client in session.session_list:
+                self.treestore.append(piter, [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
+
+        self.ietv = iet_volume.target_volumes()
+        self.ietv.parse('/proc/net/iet/volume') 
+
+        self.iet_allow = iet_allowdeny.iet_allowdeny()
+        self.iet_allow.parse('/etc/initiators.allow')
+
+        self.iet_deny = iet_allowdeny.iet_allowdeny()
+        self.iet_deny.parse('/etc/initiators.deny')
+
     def delete_target(self, button):
         path, col = self.treeview.get_cursor()
         if path == None: return
@@ -87,9 +91,13 @@ class IETView:
         delete_dialog = self.wTree.get_widget('delete_dialog')
         response = delete_dialog.run()
 
-        print response
+        if response:
+            adm = ietadm.ietadm()
+            adm.delete_target(self.iets.sessions[x].tid)
 
         delete_dialog.hide()
+
+        self.reload_sessions()
 
     def add_target(self, button):
         addedit_dialog = self.wTree.get_widget('addedit_dialog')
@@ -124,6 +132,8 @@ class IETView:
         adm = ietadm.ietadm()
         adm.add_target(tid, tname.get_text())
         adm.add_lun(tid, lun, tpath.get_text())
+
+        self.reload_sessions()
  
     def edit_target(self, button):
         path, col = self.treeview.get_cursor()
@@ -131,24 +141,36 @@ class IETView:
         if len(path) != 1: return
 
         x = path[0]
+        session = self.iets.sessions[x]
+        target = self.ietv.volumes[session.tid]
+        lun = target.luns[0]
+
 
         addedit_dialog = self.wTree.get_widget('addedit_dialog')
+        tname = self.wTree.get_widget('addedit_tname')
+        tpath = self.wTree.get_widget('addedit_tpath')
+        active = self.wTree.get_widget('addedit_active')
+        saved = self.wTree.get_widget('addedit_saved')
+
+        tname.set_text(session.name)
+        tname.set_sensitive(False)
+        tpath.set_text(lun.path)
+        tpath.set_sensitive(False)
+        active.set_active(True)
+        saved.set_active(True)
+
         response = addedit_dialog.run()
 
         addedit_dialog.hide()
 
         if response == gtk.RESPONSE_NONE or response == 0: return
 
-        tname = self.wTree.get_widget('addedit_tname')
-        tpath = self.wTree.get_widget('addedit_tpath')
-        active = self.wTree.get_widget('addedit_active')
-        saved = self.wTree.get_widget('addedit_saved')
-
         print 'Operation:', 'Edit'
         print 'Target Name:', tname.get_text()
         print 'Target Path:', tpath.get_text()
         print 'Active:', ( 'No', 'Yes' )[active.get_active()]
         print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
+
 
     def cursor_changed(self, treeview):
         path, col = treeview.get_cursor()

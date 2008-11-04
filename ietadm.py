@@ -56,4 +56,14 @@ class ietadm:
 
         return 0
 
+    def delete_target(self, tid):
+        process = subprocess.Popen('sudo ietadm --op=delete --tid=%d' % tid, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        process.wait()
+
+        if process.returncode != 0:
+            return process.returncode 
+
+        return 0
+
+
 
