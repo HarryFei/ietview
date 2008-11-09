@@ -24,6 +24,7 @@ import iet_session
 import iet_volume
 import iet_allowdeny
 import ietadm
+import target_addedit
 
 class IETView:
     def __init__(self):
@@ -40,7 +41,7 @@ class IETView:
         self.reload_sessions()
         self.treeview = self.wTree.get_widget('session_tree')
 
-        self.treeview.connect('cursor-changed', self.cursor_changed)
+        #self.treeview.connect('cursor-changed', self.cursor_changed)
         self.treeview.set_model(self.treestore)
         self.tvcolumn = gtk.TreeViewColumn('iSCSI Targets')
         self.treeview.append_column(self.tvcolumn)
@@ -53,13 +54,28 @@ class IETView:
 
         self.textview = self.wTree.get_widget('session_view')
         self.add_button = self.wTree.get_widget('target_add')
-        self.add_button.connect('clicked', self.add_target)
+        #self.add_button.connect('clicked', self.add_target)
         self.edit_button = self.wTree.get_widget('target_edit')
         self.edit_button.set_sensitive(False)
-        self.edit_button.connect('clicked', self.edit_target)
+        #self.edit_button.connect('clicked', self.edit_target)
         self.delete_button = self.wTree.get_widget('target_delete')
         self.delete_button.set_sensitive(False)
-        self.delete_button.connect('clicked', self.delete_target)
+        #self.delete_button.connect('clicked', self.delete_target)
+
+        self.addedit_dialog = target_addedit.target_addedit(self.wTree)
+
+        dic = { 'session_tree_cursor_changed_cb' : self.cursor_changed,
+                'target_add_clicked_cb' : self.add_target,
+                'target_edit_clicked_cb' : self.edit_target,
+                'target_delete_clicked_cb' : self.delete_target,
+                'lun_add_clicked_cb' : self.addedit_dialog.add_lun,
+                'lun_edit_clicked_cb' : self.addedit_dialog.edit_lun,
+                'lun_delete_clicked_cb' : self.addedit_dialog.delete_lun,
+                'lun_browse_clicked_cb' : self.addedit_dialog.path_browse_lun
+
+              }
+
+        self.wTree.signal_autoconnect (dic)
 
     def reload_sessions(self):
         self.treestore.clear()
@@ -88,7 +104,7 @@ class IETView:
 
         x = path[0]
 
-        delete_dialog = self.wTree.get_widget('delete_dialog')
+        delete_dialog = self.wTree.get_widget('target_delete_dialog')
         response = delete_dialog.run()
 
         if response:
@@ -100,38 +116,24 @@ class IETView:
         self.reload_sessions()
 
     def add_target(self, button):
-        addedit_dialog = self.wTree.get_widget('addedit_dialog')
-
-        tname = self.wTree.get_widget('addedit_tname')
-        tpath = self.wTree.get_widget('addedit_tpath')
-        active = self.wTree.get_widget('addedit_active')
-        saved = self.wTree.get_widget('addedit_saved')
-
-        tname.set_text('')
-        tpath.set_text('')
-        active.set_active(True)
-        saved.set_active(True)
-
-        response = addedit_dialog.run()
-
-        addedit_dialog.hide()
+        response = self.addedit_dialog.run_add()
 
         if response == gtk.RESPONSE_NONE or response == 0: return
 
-        print 'Operation:', 'Add'
-        print 'Target Name:', tname.get_text()
-        print 'Target Path:', tpath.get_text()
-        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
-        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
-
-        tid = len(self.iets.sessions) + 1
-        lun = 0
-        print 'Tid:', tid
-        print 'Lun:', lun
-
-        adm = ietadm.ietadm()
-        adm.add_target(tid, tname.get_text())
-        adm.add_lun(tid, lun, tpath.get_text())
+#        print 'Operation:', 'Add'
+#        print 'Target Name:', tname.get_text()
+#        #print 'Target Path:', tpath.get_text()
+#        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
+#        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
+#
+#        tid = len(self.iets.sessions) + 1
+#        lun = 0
+#        print 'Tid:', tid
+#        print 'Lun:', lun
+#
+#        adm = ietadm.ietadm()
+#        adm.add_target(tid, tname.get_text())
+#        #adm.add_lun(tid, lun, tpath.get_text())
 
         self.reload_sessions()
  
@@ -143,33 +145,36 @@ class IETView:
         x = path[0]
         session = self.iets.sessions[x]
         target = self.ietv.volumes[session.tid]
-        lun = target.luns[0]
 
-
-        addedit_dialog = self.wTree.get_widget('addedit_dialog')
-        tname = self.wTree.get_widget('addedit_tname')
-        tpath = self.wTree.get_widget('addedit_tpath')
-        active = self.wTree.get_widget('addedit_active')
-        saved = self.wTree.get_widget('addedit_saved')
-
-        tname.set_text(session.name)
-        tname.set_sensitive(False)
-        tpath.set_text(lun.path)
-        tpath.set_sensitive(False)
-        active.set_active(True)
-        saved.set_active(True)
-
-        response = addedit_dialog.run()
-
-        addedit_dialog.hide()
+        response = self.addedit_dialog.run_edit(target)
 
         if response == gtk.RESPONSE_NONE or response == 0: return
 
-        print 'Operation:', 'Edit'
-        print 'Target Name:', tname.get_text()
-        print 'Target Path:', tpath.get_text()
-        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
-        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
+        self.reload_sessions()
+#        addedit_dialog = self.wTree.get_widget('addedit_dialog')
+#        tname = self.wTree.get_widget('addedit_tname')
+#        #tpath = self.wTree.get_widget('addedit_tpath')
+#        active = self.wTree.get_widget('addedit_active')
+#        saved = self.wTree.get_widget('addedit_saved')
+#
+#        tname.set_text(session.name)
+#        tname.set_sensitive(False)
+#        #tpath.set_text(lun.path)
+#        #tpath.set_sensitive(False)
+#        active.set_active(True)
+#        saved.set_active(True)
+#
+#        response = addedit_dialog.run()
+#
+#        addedit_dialog.hide()
+#
+#        if response == gtk.RESPONSE_NONE or response == 0: return
+#
+#        print 'Operation:', 'Edit'
+#        print 'Target Name:', tname.get_text()
+#        #print 'Target Path:', tpath.get_text()
+#        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
+#        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
 
 
     def cursor_changed(self, treeview):
