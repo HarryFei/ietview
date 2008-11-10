@@ -120,11 +120,14 @@ class IETView:
 
         if response == gtk.RESPONSE_NONE or response == 0: return
 
-#        print 'Operation:', 'Add'
-#        print 'Target Name:', tname.get_text()
-#        #print 'Target Path:', tpath.get_text()
-#        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
-#        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
+        print 'Operation:', 'Add'
+        print 'Target Name:', self.addedit_dialog.tname.get_text()
+        print 'Active:', ( 'No', 'Yes' )[self.addedit_dialog.active.get_active()]
+        print 'Saved:', ( 'No', 'Yes' )[self.addedit_dialog.saved.get_active()]
+        print 'Lun Info:'
+
+        for row in self.addedit_dialog.lun_store:
+            print row[0], row[1]
 #
 #        tid = len(self.iets.sessions) + 1
 #        lun = 0
@@ -151,30 +154,6 @@ class IETView:
         if response == gtk.RESPONSE_NONE or response == 0: return
 
         self.reload_sessions()
-#        addedit_dialog = self.wTree.get_widget('addedit_dialog')
-#        tname = self.wTree.get_widget('addedit_tname')
-#        #tpath = self.wTree.get_widget('addedit_tpath')
-#        active = self.wTree.get_widget('addedit_active')
-#        saved = self.wTree.get_widget('addedit_saved')
-#
-#        tname.set_text(session.name)
-#        tname.set_sensitive(False)
-#        #tpath.set_text(lun.path)
-#        #tpath.set_sensitive(False)
-#        active.set_active(True)
-#        saved.set_active(True)
-#
-#        response = addedit_dialog.run()
-#
-#        addedit_dialog.hide()
-#
-#        if response == gtk.RESPONSE_NONE or response == 0: return
-#
-#        print 'Operation:', 'Edit'
-#        print 'Target Name:', tname.get_text()
-#        #print 'Target Path:', tpath.get_text()
-#        print 'Active:', ( 'No', 'Yes' )[active.get_active()]
-#        print 'Saved:', ( 'No', 'Yes' )[saved.get_active()]
 
 
     def cursor_changed(self, treeview):

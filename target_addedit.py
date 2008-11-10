@@ -73,6 +73,7 @@ class target_addedit:
 
         self.option_store.clear()
         self.lun_store.clear()
+
         for lun_id in target.luns.keys():
             self.lun_store.append([target.luns[lun_id].path, target.luns[lun_id].iotype])
 
