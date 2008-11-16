@@ -15,38 +15,51 @@
 
 import re
 
-class iet_conf_lun:
-    def __init__(self, n, p, t):
-        self.number = n
-        self.type = t
-        self.path = p
+class IETConfLun:
+    def __init__(self, number, path, type, **kwargs):
+        self.number = number
+        self.type = type
+        self.path = path
         
-    def write(self, file):
-        pass
+    def write(self, f):
+        f.write('\tLun %d Path=%s,Type=%s\n' % (self.number, self.path, self.type))
 
-class iet_conf_target:
-    def __init__(self, n):
-        self.name = n
+class IETConfTarget:
+    def __init__(self, name, **kwargs):
+        self.name = name
         self.luns = {}
         self.options = {}
 
-    def write(self, file):
-        pass
+        for kw in kwargs: options[kw] = kwargs[kw]
+        
+    def add_lun(self, number, path, type, **keys):
+        self.luns[number] = IETConfLun(number, path, type, **kwargs)
 
-class iet_conf_file:
+    def write(self, f):
+        f.write('Target %s\n' % self.name)
+
+        for lun in self.luns.itervalues():
+            lun.write(f)
+
+        for key, val in self.options.iteritems():
+            f.write('\t%s %s\n' % (key, ' '.join(val)))
+
+class IETConfFile:
     def __init__(self):
         self.targets = {}
         self.options = {}
 
+    def add_target(self, name, **kwargs):
+        self.targets[name] = IETConfTarget(name, **kwargs)
+
     def write(self, filename):
+        f = file(filename, 'w')
+
         for key, val in self.options.iteritems():
-            print key, ' '.join(val)
-        for name, target in self.targets.iteritems():
-            print 'Target', target.name
-            for number, lun in target.luns.iteritems():
-                print '\tLun %d Path=%s,Type=%s' % (lun.number, lun.path, lun.type)
-            for key, val in target.options.iteritems():
-                print '\t%s %s' % (key, ' '.join(val))
+            f.write('%s %s\n' % (key, ' '.join(val)))
+
+        for target in self.targets.itervalues():
+            target.write(f)
 
     def parse(self, filename):
         f = file(filename, 'r')
@@ -63,13 +76,13 @@ class iet_conf_file:
 
             if m:
                 if current_target: self.targets[current_target.name] = current_target
-                current_target = iet_conf_target(m.group(1))
+                current_target = IETConfTarget(m.group(1))
                 continue
 
             #TODO: Make case insensitive
             m = re.search("Lun\s+(\d+)\s+Path=([^ \t\n\r\f\v,]+)\s*,\s*Type\s*=\s*(\w+)", line)
             if m:
-                new_lun = iet_conf_lun(int(m.group(1)), m.group(2), m.group(3))
+                new_lun = IETConfLun(int(m.group(1)), m.group(2), m.group(3))
         
                 current_target.luns[new_lun.number] = new_lun
         
