@@ -36,13 +36,13 @@ class IETView:
         if self.main_window:
             self.main_window.connect('destroy', gtk.main_quit)
 
-        self.treestore = gtk.TreeStore(str)
+        self.target_store = gtk.TreeStore(str)
 
         self.reload_sessions()
         self.treeview = self.wTree.get_widget('session_tree')
 
         #self.treeview.connect('cursor-changed', self.cursor_changed)
-        self.treeview.set_model(self.treestore)
+        self.treeview.set_model(self.target_store)
         self.tvcolumn = gtk.TreeViewColumn('iSCSI Targets')
         self.treeview.append_column(self.tvcolumn)
         self.cell = gtk.CellRendererText()
@@ -76,17 +76,22 @@ class IETView:
               }
 
         self.wTree.signal_autoconnect (dic)
+        self.treeview.expand_row((0), False)
 
     def reload_sessions(self):
-        self.treestore.clear()
+        self.target_store.clear()
 
         self.iets = iet_session.iet_sessions()
         self.iets.parse('/proc/net/iet/session')
+
+        active_targets = self.target_store.append(None, ['Active Targets'])
         
         for session in self.iets.sessions:
-            piter = self.treestore.append(None, [ session.name ])
+            piter = self.target_store.append(active_targets, [ session.name ])
             for client in session.session_list:
-                self.treestore.append(piter, [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
+                self.target_store.append(piter, [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
+
+        disabled_targets = self.target_store.append(None, ['Disabled Targets'])
 
         self.ietv = iet_volume.target_volumes()
         self.ietv.parse('/proc/net/iet/volume') 
@@ -100,9 +105,9 @@ class IETView:
     def delete_target(self, button):
         path, col = self.treeview.get_cursor()
         if path == None: return
-        if len(path) != 1: return
+        if len(path) != 2: return
 
-        x = path[0]
+        x = path[1]
 
         delete_dialog = self.wTree.get_widget('target_delete_dialog')
         response = delete_dialog.run()
@@ -141,9 +146,9 @@ class IETView:
     def edit_target(self, button):
         path, col = self.treeview.get_cursor()
         if path == None: return
-        if len(path) != 1: return
+        if len(path) != 2: return
 
-        x = path[0]
+        x = path[1]
         session = self.iets.sessions[x]
         target = self.ietv.volumes[session.tid]
 
@@ -151,19 +156,24 @@ class IETView:
 
         if response == gtk.RESPONSE_NONE or response == 0: return
 
+        tname = self.addedit_dialog.tname.get_text()
         print 'Operation:', 'Edit'
-        print 'Target Name:', self.addedit_dialog.tname.get_text()
+        print 'Target Name:', tname
 
         print 'Tid:', session.tid
         print 'Active:', ( 'No', 'Yes' )[self.addedit_dialog.active.get_active()]
         print 'Saved:', ( 'No', 'Yes' )[self.addedit_dialog.saved.get_active()]
+
+#        if tname != target.name:
+#            changes['Name'] = tname
+
         print 'Lun Info:'
+        for idx, row in enumerate(self.addedit_dialog.lun_store):
+            print idx, row[0], row[1]
 
 #        adm = ietadm.ietadm()
-#        adm.add_target(tid, tname.get_text())
-#
-#        for idx, row in enumerate(self.addedit_dialog.lun_store):
-#            print idx, row[0], row[1]
+#        adm.update_target(tid, changes)
+
 #            adm.add_lun(tid, lun=idx, path=row[0], type=row[1])
 #
 
@@ -174,9 +184,10 @@ class IETView:
         path, col = treeview.get_cursor()
         
         if path == None: return
+        if len(path) == 1: return
 
-        if len(path) == 1:
-            x = path[0]
+        if len(path) == 2:
+            x = path[1]
             buf = gtk.TextBuffer()
             buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
@@ -230,7 +241,8 @@ class IETView:
             self.delete_button.set_sensitive(True)
             self.edit_button.set_sensitive(True)
         else:
-            x, y = path
+            x = path(1)
+            y = path(2)
             x, y = int(x), int(y)
             client = self.iets.sessions[x].session_list[y]
             buf = gtk.TextBuffer()
