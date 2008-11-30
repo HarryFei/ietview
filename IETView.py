@@ -120,23 +120,21 @@ class IETView:
 
         if response == gtk.RESPONSE_NONE or response == 0: return
 
+        tname = self.addedit_dialog.tname.get_text()
         print 'Operation:', 'Add'
-        print 'Target Name:', self.addedit_dialog.tname.get_text()
+        print 'Target Name:', tname
+        tid = len(self.iets.sessions) + 1
+        print 'Tid:', tid
         print 'Active:', ( 'No', 'Yes' )[self.addedit_dialog.active.get_active()]
         print 'Saved:', ( 'No', 'Yes' )[self.addedit_dialog.saved.get_active()]
         print 'Lun Info:'
 
-        for row in self.addedit_dialog.lun_store:
-            print row[0], row[1]
-#
-#        tid = len(self.iets.sessions) + 1
-#        lun = 0
-#        print 'Tid:', tid
-#        print 'Lun:', lun
-#
-#        adm = ietadm.ietadm()
-#        adm.add_target(tid, tname.get_text())
-#        #adm.add_lun(tid, lun, tpath.get_text())
+        adm = ietadm.ietadm()
+        adm.add_target(tid, tname)
+
+        for idx, row in enumerate(self.addedit_dialog.lun_store):
+            print idx, row[0], row[1]
+            adm.add_lun(tid, lun=idx, path=row[0], type=row[1])
 
         self.reload_sessions()
  
@@ -152,6 +150,22 @@ class IETView:
         response = self.addedit_dialog.run_edit(target)
 
         if response == gtk.RESPONSE_NONE or response == 0: return
+
+        print 'Operation:', 'Edit'
+        print 'Target Name:', self.addedit_dialog.tname.get_text()
+
+        print 'Tid:', session.tid
+        print 'Active:', ( 'No', 'Yes' )[self.addedit_dialog.active.get_active()]
+        print 'Saved:', ( 'No', 'Yes' )[self.addedit_dialog.saved.get_active()]
+        print 'Lun Info:'
+
+#        adm = ietadm.ietadm()
+#        adm.add_target(tid, tname.get_text())
+#
+#        for idx, row in enumerate(self.addedit_dialog.lun_store):
+#            print idx, row[0], row[1]
+#            adm.add_lun(tid, lun=idx, path=row[0], type=row[1])
+#
 
         self.reload_sessions()
 
@@ -179,13 +193,13 @@ class IETView:
 
                 buf.insert_with_tags_by_name(buf.get_end_iter(), 'LUN: ', 'Bold')
                 buf.insert(buf.get_end_iter(), str(lun.lun) + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 'Path: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tPath: ', 'Bold')
                 buf.insert(buf.get_end_iter(), lun.path + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 'State: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tState: ', 'Bold')
                 buf.insert(buf.get_end_iter(), str(lun.state) + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 'IO Type: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tIO Type: ', 'Bold')
                 buf.insert(buf.get_end_iter(), lun.iotype + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 'IO Mode: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tIO Mode: ', 'Bold')
                 buf.insert(buf.get_end_iter(), lun.iomode + '\n')
 
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')

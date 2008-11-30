@@ -47,8 +47,8 @@ class ietadm:
 
         return 0
 
-    def add_lun(self, tid, lun, path):
-        process = subprocess.Popen('sudo ietadm --op=new --tid=%d --lun=%d --params Path=%s' % (tid, lun, path), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+    def add_lun(self, tid, lun, path, type):
+        process = subprocess.Popen('sudo ietadm --op=new --tid=%d --lun=%d --params=Path=%s,Type=%s' % (tid, lun, path, type), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
         process.wait()
 
         if process.returncode != 0:
