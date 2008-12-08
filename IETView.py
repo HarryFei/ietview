@@ -23,10 +23,12 @@ import pango
 import iet_session
 import iet_volume
 import iet_allowdeny
+import iet_target
+import iet_conf
 import ietadm
 import target_addedit
 
-class IETView:
+class IetView:
     def __init__(self):
         self.gladefile = 'IETView.glade'
         self.wTree = gtk.glade.XML(self.gladefile)
@@ -39,20 +41,20 @@ class IETView:
         self.target_store = gtk.TreeStore(str)
 
         self.reload_sessions()
-        self.treeview = self.wTree.get_widget('session_tree')
+        self.target_list = self.wTree.get_widget('session_tree')
 
-        #self.treeview.connect('cursor-changed', self.cursor_changed)
-        self.treeview.set_model(self.target_store)
+        #self.target_list.connect('cursor-changed', self.cursor_changed)
+        self.target_list.set_model(self.target_store)
         self.tvcolumn = gtk.TreeViewColumn('iSCSI Targets')
-        self.treeview.append_column(self.tvcolumn)
+        self.target_list.append_column(self.tvcolumn)
         self.cell = gtk.CellRendererText()
         self.tvcolumn.pack_start(self.cell, True)
         self.tvcolumn.add_attribute(self.cell, 'text', 0)
-        self.treeview.set_search_column(0)
+        self.target_list.set_search_column(0)
         self.tvcolumn.set_sort_column_id(-1)
-        self.treeview.set_reorderable(False)
+        self.target_list.set_reorderable(False)
 
-        self.textview = self.wTree.get_widget('session_view')
+        self.target_details = self.wTree.get_widget('session_view')
         self.add_button = self.wTree.get_widget('target_add')
         #self.add_button.connect('clicked', self.add_target)
         self.edit_button = self.wTree.get_widget('target_edit')
@@ -62,7 +64,7 @@ class IETView:
         self.delete_button.set_sensitive(False)
         #self.delete_button.connect('clicked', self.delete_target)
 
-        self.addedit_dialog = target_addedit.target_addedit(self.wTree)
+        self.addedit_dialog = target_addedit.TargetAddEdit(self.wTree)
 
         dic = { 'session_tree_cursor_changed_cb' : self.cursor_changed,
                 'target_add_clicked_cb' : self.add_target,
@@ -72,38 +74,44 @@ class IETView:
                 'lun_edit_clicked_cb' : self.addedit_dialog.edit_lun,
                 'lun_delete_clicked_cb' : self.addedit_dialog.delete_lun,
                 'lun_browse_clicked_cb' : self.addedit_dialog.path_browse_lun
-
               }
 
         self.wTree.signal_autoconnect (dic)
-        self.treeview.expand_row((0), False)
+        self.target_list.expand_row((0), False)
 
     def reload_sessions(self):
         self.target_store.clear()
 
-        self.iets = iet_session.iet_sessions()
+        self.iets = iet_session.IetSessions()
         self.iets.parse('/proc/net/iet/session')
+
+        self.ietc = iet_conf.IetConfFile()
+        self.ietc.parse('/etc/ietd.conf')
 
         active_targets = self.target_store.append(None, ['Active Targets'])
         
-        for session in self.iets.sessions:
-            piter = self.target_store.append(active_targets, [ session.name ])
-            for client in session.session_list:
-                self.target_store.append(piter, [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
+        for session in self.iets.sessions.itervalues():
+            piter = self.target_store.append(active_targets, [ session.target ])
+            for client in session.clients.itervalues():
+                self.target_store.append(piter,
+                           [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
 
         disabled_targets = self.target_store.append(None, ['Disabled Targets'])
 
-        self.ietv = iet_volume.target_volumes()
+        for target in self.ietc.inactive_targets.itervalues():
+            self.target_store.append(disabled_targets, [ target.name ])
+
+        self.ietv = iet_volume.IetVolumes()
         self.ietv.parse('/proc/net/iet/volume') 
 
-        self.iet_allow = iet_allowdeny.iet_allowdeny()
+        self.iet_allow = iet_allowdeny.IetAllowDeny()
         self.iet_allow.parse('/etc/initiators.allow')
 
-        self.iet_deny = iet_allowdeny.iet_allowdeny()
+        self.iet_deny = iet_allowdeny.IetAllowDeny()
         self.iet_deny.parse('/etc/initiators.deny')
 
     def delete_target(self, button):
-        path, col = self.treeview.get_cursor()
+        path, col = self.target_list.get_cursor()
         if path == None: return
         if len(path) != 2: return
 
@@ -144,7 +152,7 @@ class IETView:
         self.reload_sessions()
  
     def edit_target(self, button):
-        path, col = self.treeview.get_cursor()
+        path, col = self.target_list.get_cursor()
         if path == None: return
         if len(path) != 2: return
 
@@ -154,7 +162,24 @@ class IETView:
 
         response = self.addedit_dialog.run_edit(target)
 
-        if response == gtk.RESPONSE_NONE or response == 0: return
+        if response == gtk.RESPONSE_NONE or response == 0:
+            return
+
+        old = iet_target.IetTarget(target=target)
+        old.set_from_active()
+
+        new = iet_target.IetTarget(dialog=self.addedit_dialog)
+        new.set_from_dialog()
+
+        diff = old.diff(right=new)
+
+        ietadm.update(old, diff)
+
+        allow.update(old, diff)
+        deny.update(old, diff)
+
+        if self.addedit_dialog.saved.get_active():
+            config.update(old, diff)
 
         tname = self.addedit_dialog.tname.get_text()
         print 'Operation:', 'Edit'
@@ -180,63 +205,73 @@ class IETView:
         self.reload_sessions()
 
 
-    def cursor_changed(self, treeview):
-        path, col = treeview.get_cursor()
+    def cursor_changed(self, target_list):
+        path, col = target_list.get_cursor()
         
-        if path == None: return
-        if len(path) == 1: return
+        if path == None or len(path) == 1:
+            return
 
         if len(path) == 2:
-            x = path[1]
+            target = self.target_store[path][0]
+            tid = self.iets.sessions[target].tid
+
             buf = gtk.TextBuffer()
             buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
-            buf.insert(buf.get_end_iter(), str(self.iets.sessions[x].tid) + '\n')
+            buf.insert(buf.get_end_iter(), str(tid) + '\n')
+
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
-            buf.insert(buf.get_end_iter(), self.iets.sessions[x].name + '\n')
+            buf.insert(buf.get_end_iter(), target + '\n')
 
-            tid = self.iets.sessions[x].tid
-            target = self.ietv.volumes[tid]
-            luns = target.luns.keys()
-            luns.sort()
-            for lk in luns:
-                lun = target.luns[lk]
+            vol = self.ietv.volumes[tid]
+            for lk in sorted(vol.luns.iterkeys()):
+                lun = vol.luns[lk]
 
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 'LUN: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                             'LUN: ', 'Bold')
+
                 buf.insert(buf.get_end_iter(), str(lun.lun) + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tPath: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                             '\tPath: ', 'Bold')
+                
                 buf.insert(buf.get_end_iter(), lun.path + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tState: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                             '\tState: ', 'Bold')
+
                 buf.insert(buf.get_end_iter(), str(lun.state) + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tIO Type: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                             '\tIO Type: ', 'Bold')
+
                 buf.insert(buf.get_end_iter(), lun.iotype + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), '\tIO Mode: ', 'Bold')
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                             '\tIO Mode: ', 'Bold')
+
                 buf.insert(buf.get_end_iter(), lun.iomode + '\n')
 
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
 
-            if self.iets.sessions[x].name in self.iet_deny.initiators:
-                buf.insert(buf.get_end_iter(), str(self.iet_deny.initiators[self.iets.sessions[x].name]) + '\n')
+            if target in self.iet_deny.targets:
+                buf.insert(buf.get_end_iter(),
+                           str(self.iet_deny.targets[target]) + '\n')
             else:
                 buf.insert(buf.get_end_iter(), '\n')
 
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
 
-            if self.iets.sessions[x].name in self.iet_allow.initiators:
-                buf.insert(buf.get_end_iter(), str(self.iet_allow.initiators[self.iets.sessions[x].name]) + '\n')
+            if target in self.iet_allow.targets:
+                buf.insert(buf.get_end_iter(),
+                           str(self.iet_allow.targets[targets]) + '\n')
             else:
                 buf.insert(buf.get_end_iter(), '\n')
 
-            adm = ietadm.ietadm()
+            adm = ietadm.IetAdm()
             params = {}
-            adm.show(params, self.iets.sessions[x].tid)
-            keys = params.keys()
-            keys.sort()
-            for key in keys:
+            adm.show(params, tid)
+            for key in sorted(params.iterkeys()):
                 buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
                 buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
 
-            self.textview.set_buffer(buf)
+            self.target_details.set_buffer(buf)
 
             self.delete_button.set_sensitive(True)
             self.edit_button.set_sensitive(True)
@@ -272,11 +307,11 @@ class IETView:
                 buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
 
 
-            self.textview.set_buffer(buf)
+            self.target_details.set_buffer(buf)
 
             self.delete_button.set_sensitive(False)
             self.edit_button.set_sensitive(False)
         
 if __name__ == '__main__':
-    iet_view = IETView()
+    iet_view = IetView()
     gtk.main()

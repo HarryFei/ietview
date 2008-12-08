@@ -16,7 +16,7 @@
 import re
 import subprocess
 
-class ietadm:
+class IetAdm:
     def __init__(self):
         pass
 

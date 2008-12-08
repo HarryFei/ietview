@@ -15,7 +15,7 @@
 
 import gtk
 
-class target_addedit:
+class TargetAddEdit:
     def __init__(self, widgets):
         self.wTree = widgets
         self.option_store = gtk.ListStore(str, str)

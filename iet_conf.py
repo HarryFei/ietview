@@ -15,7 +15,7 @@
 
 import re
 
-class IETConfLun:
+class IetConfLun:
     def __init__(self, number, path, type, **kwargs):
         self.number = number
         self.type = type
@@ -24,7 +24,7 @@ class IETConfLun:
     def write(self, f):
         f.write('\tLun %d Path=%s,Type=%s\n' % (self.number, self.path, self.type))
 
-class IETConfTarget:
+class IetConfTarget:
     def __init__(self, name, **kwargs):
         self.name = name
         self.luns = {}
@@ -44,10 +44,17 @@ class IETConfTarget:
         for key, val in self.options.iteritems():
             f.write('\t%s %s\n' % (key, ' '.join(val)))
 
-class IETConfFile:
+class IetConfFile:
+    TARGET_REGEX='Target\s+(?P<target>\S+)'
+    CMNT_TARGET_REGEX='\s*#\s*Target\s+(?P<target>\S+)'
+    LUN_REGEX='Lun\s+(?P<lun>\d+)\s+Path=(?P<path>[^ \t\n\r\f\v,]+)\s*,\s*Type\s*=\s*(?P<iotype>\w+)'
+    OPTION_REGEX='\s*(?P<key>\S+)\s+(?P<value>\S+)'
+    USERPASS_REGEX='\s*(?P<key>\S+)\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
+
     def __init__(self):
         self.targets = {}
         self.options = {}
+        self.inactive_targets = {}
 
     def add_target(self, name, **kwargs):
         self.targets[name] = IETConfTarget(name, **kwargs)
@@ -72,37 +79,43 @@ class IETConfFile:
             if '#' in line: continue
 
             #TODO: Make case insensitive
-            m = re.search("Target\s+(\S+)", line)
+            m = re.search(self.TARGET_REGEX, line)
 
             if m:
-                if current_target: self.targets[current_target.name] = current_target
-                current_target = IETConfTarget(m.group(1))
+                if current_target:
+                    self.targets[current_target.name] = current_target
+
+                current_target = IetConfTarget(m.group('target'))
                 continue
 
             #TODO: Make case insensitive
-            m = re.search("Lun\s+(\d+)\s+Path=([^ \t\n\r\f\v,]+)\s*,\s*Type\s*=\s*(\w+)", line)
+            m = re.search(self.LUN_REGEX, line)
             if m:
-                new_lun = IETConfLun(int(m.group(1)), m.group(2), m.group(3))
+                new_lun = IetConfLun(int(m.group('lun')), m.group('path'),
+                                     m.group('iotype'))
         
                 current_target.luns[new_lun.number] = new_lun
         
                 continue
         
-            m = re.match('\s*(\S+)\s+(\S+)', line)
+            m = re.match(self.OPTION_REGEX, line)
             if m:
                 if current_target:
-                    current_target.options[m.group(1)] = m.group(2)
+                    current_target.options[m.group('key')] = m.group('value')
                 else:
-                    self.options[m.group(1)] = m.group(2)
+                    self.options[m.group('key')] = m.group('value')
                     
-            m = re.match('\s*(\S+)\s+(\S+)\s+(\S+)', line)
+            m = re.match(self.USERPASS_REGEX, line)
             if m:
                 if current_target:
-                    current_target.options[m.group(1)] = (m.group(2), m.group(3))
+                    current_target.options[m.group('key')] = (m.group('uname'),
+                                                              m.group('pass'))
                 else:
-                    self.options[m.group(1)] = (m.group(2), m.group(3))
+                    self.options[m.group('key')] = (m.group('uname'),
+                                                    m.group('pass'))
         
         f.close()
 
         if current_target: self.targets[current_target.name] = current_target
+
 

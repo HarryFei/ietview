@@ -15,9 +15,10 @@
 
 import re
 
-class iet_allowdeny:
+class IetAllowDeny:
+    ALLOWDENY_REGEX='\s*(P?<target>\S+)\s+(P?<hosts>.+)'
     def __init__(self):
-        self.initiators = {}
+        self.targets = {}
 
     def parse(self, filename):
         f = open(filename, 'r')
@@ -25,16 +26,15 @@ class iet_allowdeny:
         for line in f:
             if re.match('\s*#', line): continue
 
-            m = re.match('\s*(\S+)\s+(.+)', line)
+            m = re.match(self.ALLOWDENY_REGEX, line)
 
             if m:
-                initiator = m.group(1)
-                hosts = re.split('\s*,\s*', m.group(2))
-                self.initiators[initiator] = hosts
+                hosts = re.split('\s*,\s*', m.group('hosts'))
+                self.targets[m.group('target')] = hosts
 
         f.close
 
     def dump(self):
-        for i in self.initiators.keys():
-            print i, '=', self.initiators[i]
+        for key, value in self.targets.iteritems():
+            print key, '=', value
 

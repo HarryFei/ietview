@@ -17,25 +17,27 @@
 
 import re
 
-class target_lun:
-    def __init__(self, l, s, it, im, p):
-        self.lun = l
-        self.state = s
-        self.iotype = it
-        self.iomode = im
-        self.path = p
+class IetLun:
+    def __init__(self, lun, state, iotype, iomode, path):
+        self.lun = lun
+        self.state = state
+        self.iotype = iotype
+        self.iomode = iomode
+        self.path = path
 
-class target_volume:
-    def __init__(self, t, n):
-        self.tid = t
-        self.name = n
+class IetVolume:
+    def __init__(self, tid, target):
+        self.tid = tid
+        self.target = target
 
         self.luns = {}
 
     def add_lun(self, l):
         self.luns[l.lun] = l
 
-class target_volumes:
+class IetVolumes:
+    TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
+    LUN_REGEX='lun:(?P<lun>\d+)\s+state:(?P<state>\d+)\s+iotype:(?P<iotype>\w+)\s+iomode:(?P<iomode>\w+)\s+path:(?P<path>.+)'
     def __init__(self):
         self.volumes = {}
 
@@ -45,16 +47,17 @@ class target_volumes:
         tv = None
 
         for line in f:
-            m = re.search("tid:(\d+)\s+name:(.+)", line)
+            m = re.search(self.TARGET_REGEX, line)
             if m:
-                tv = target_volume(int(m.group(1)), m.group(2))
+                tv = IetVolume(int(m.group('tid')), m.group('target'))
                 self.volumes[tv.tid] = tv
         
-            m = re.search("lun:(\d+)\s+state:(\d+)\s+iotype:(\w+)\s+iomode:(\w+)\s+path:(.+)", line) 
+            m = re.search(self.LUN_REGEX, line) 
 
             if m:
-                tv.add_lun(target_lun(int(m.group(1)), int(m.group(2)), m.group(3), m.group(4), m.group(5)))
+                tv.add_lun(IetLun(int(m.group('lun')), int(m.group('state')),
+                                  m.group('iotype'), m.group('iomode'),
+                                  m.group('path')))
 
         f.close()
-
 

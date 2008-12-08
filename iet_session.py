@@ -17,69 +17,77 @@
 
 import re
 
-class iet_session:
-    def __init__(self, t, n):
-        self.tid = t
-        self.name = n
+class IetSession:
+    def __init__(self, tid, target):
+        self.tid = tid
+        self.target = target
     
-        self.session_list = []
+        self.clients = {}
 
-class iet_client_session:
-    def __init__(self, s, i):
-        self.sid = s
-        self.initiator = i
+class IetInitiatorClient:
+    def __init__(self, sid, initiator):
+        self.sid = sid
+        self.initiator = initiator
         self.cid = -1
         self.ip = ""
         self.state = ""
         self.hd = ""
         self.dd = ""
 
-    def set_cid(self, c, i, s, h, d):
-        self.cid = c
-        self.ip = i
-        self.state = s
-        self.hd = h
-        self.dd = d
+    def set_cid(self, cid, ip, state, hd, dd):
+        self.cid = cid
+        self.ip = ip
+        self.state = state
+        self.hd = hd
+        self.dd = dd
 
-class iet_sessions:
+class IetSessions:
+    TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
+    INITIATOR_REGEX='sid:(?P<sid>\d+)\s+initiator:(?P<init>.+)'
+    CLIENT_REGEX='cid:(?P<cid>\d+)\s+ip:(?P<ip>[0-9\.]+)\s+state:(?P<state>\w+)\s+hd:(?P<hd>\w+)\s+dd:(?P<dd>\w+)'
+
     def __init__(self):
-        self.sessions = []
+        self.sessions = {}
 
     def parse(self, filename):
         f = file(filename, 'r')
 
-        current_session = None
-        current_client = None
+        session = None
+        client = None
 
         for line in f:
-            m = re.search("tid:(\d+)\s+name:(.+)", line)
+            m = re.search(self.TARGET_REGEX, line)
             if m:
-                if current_session: self.sessions.append(current_session)
-        
-                current_session = iet_session(int(m.group(1)), m.group(2))
+                session = IetSession(int(m.group('tid')),
+                                     m.group('target'))
+
+                self.sessions[session.target] = session
                 continue
         
-            m = re.search("sid:(\d+)\s+initiator:(.+)", line)
+            m = re.search(self.INITIATOR_REGEX, line)
             if m:
-                current_client = iet_client_session(int(m.group(1)), m.group(2))
+                client = IetInitiatorClient(int(m.group('sid')),
+                                            m.group('init'))
+
                 continue
         
-            m = re.search("cid:(\d+)\s+ip:([0-9\.]+)\s+state:(\w+)\s+hd:(\w+)\s+dd:(\w+)", line)
+            m = re.search(self.CLIENT_REGEX, line)
             if m:
-                current_client.set_cid(int(m.group(1)), m.group(2), m.group(3),
-                        m.group(4), m.group(5))
+                client.set_cid(int(m.group('cid')), m.group('ip'),
+                                   m.group('state'), m.group('hd'),
+                                   m.group('dd'))
         
-                current_session.session_list.append(current_client)
+                session.clients[client.initiator] = client
+
                 continue
                 
         f.close()
         
-        if current_session: self.sessions.append(current_session)
-
      
     def dump(self):        
-        for session in self.sessions:
-            print session.tid, session.name
-            for client in session.session_list:
-                print client.sid, client.initiator, client.cid, client.ip, client.state, client.hd, client.dd
+        for session in self.sessions.itervalues():
+            print session.tid, session.target
+            for client in session.clients:
+                print client.sid, client.initiator, client.cid, client.ip,\
+                      client.state, client.hd, client.dd
         
