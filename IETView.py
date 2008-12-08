@@ -38,7 +38,7 @@ class IetView:
         if self.main_window:
             self.main_window.connect('destroy', gtk.main_quit)
 
-        self.target_store = gtk.TreeStore(str)
+        self.target_store = gtk.TreeStore(str, str)
 
         self.reload_sessions()
         self.target_list = self.wTree.get_widget('session_tree')
@@ -88,18 +88,18 @@ class IetView:
         self.ietc = iet_conf.IetConfFile()
         self.ietc.parse('/etc/ietd.conf')
 
-        active_targets = self.target_store.append(None, ['Active Targets'])
+        active_targets = self.target_store.append(None, ['Active Targets', ''])
         
         for session in self.iets.sessions.itervalues():
-            piter = self.target_store.append(active_targets, [ session.target ])
+            piter = self.target_store.append(active_targets, [ session.target, '' ])
             for client in session.clients.itervalues():
                 self.target_store.append(piter,
-                           [ '%s/%s (%s)' % (client.ip, client.initiator, client.state)])
+                           [ '%s/%s (%s)' % (client.ip, client.initiator, client.state), client.initiator ])
 
-        disabled_targets = self.target_store.append(None, ['Disabled Targets'])
+        disabled_targets = self.target_store.append(None, ['Disabled Targets', ''])
 
         for target in self.ietc.inactive_targets.itervalues():
-            self.target_store.append(disabled_targets, [ target.name ])
+            self.target_store.append(disabled_targets, [ target.name, '' ])
 
         self.ietv = iet_volume.IetVolumes()
         self.ietv.parse('/proc/net/iet/volume') 
@@ -276,10 +276,9 @@ class IetView:
             self.delete_button.set_sensitive(True)
             self.edit_button.set_sensitive(True)
         else:
-            x = path(1)
-            y = path(2)
-            x, y = int(x), int(y)
-            client = self.iets.sessions[x].session_list[y]
+            target = self.target_store[path[0:2]][0]
+            initiator = self.target_store[path][1]
+            client = self.iets.sessions[target].clients[initiator]
             buf = gtk.TextBuffer()
             buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'SID: ', 'Bold')
@@ -297,9 +296,9 @@ class IetView:
             buf.insert_with_tags_by_name(buf.get_end_iter(), 'DD: ', 'Bold')
             buf.insert(buf.get_end_iter(), client.dd + '\n')
 
-            adm = ietadm.ietadm()
+            adm = ietadm.IetAdm()
             params = {}
-            adm.show(params, self.iets.sessions[x].tid, client.sid)
+            adm.show(params, self.iets.sessions[target].tid, client.sid)
             keys = params.keys()
             keys.sort()
             for key in keys:
