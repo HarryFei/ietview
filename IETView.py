@@ -156,16 +156,16 @@ class IetView:
         if path == None: return
         if len(path) != 2: return
 
-        x = path[1]
-        session = self.iets.sessions[x]
-        target = self.ietv.volumes[session.tid]
+        target = self.target_store[path][0]
+        session = self.iets.sessions[target]
+        vol = self.ietv.volumes[session.tid]
 
-        response = self.addedit_dialog.run_edit(target)
+        response = self.addedit_dialog.run_edit(vol)
 
         if response == gtk.RESPONSE_NONE or response == 0:
             return
 
-        old = iet_target.IetTarget(target=target)
+        old = iet_target.IetTarget(target=vol)
         old.set_from_active()
 
         new = iet_target.IetTarget(dialog=self.addedit_dialog)

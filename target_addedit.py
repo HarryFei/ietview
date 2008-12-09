@@ -64,8 +64,8 @@ class TargetAddEdit:
 
         return response
 
-    def run_edit(self, target):
-        self.tname.set_text(target.name)
+    def run_edit(self, vol):
+        self.tname.set_text(vol.target)
         #TODO: Check config file
 
         self.active.set_active(True)
@@ -74,8 +74,8 @@ class TargetAddEdit:
         self.option_store.clear()
         self.lun_store.clear()
 
-        for lun_id in target.luns.keys():
-            self.lun_store.append([target.luns[lun_id].path, target.luns[lun_id].iotype])
+        for lun in vol.luns.itervalues():
+            self.lun_store.append([lun.path, lun.iotype])
 
         self.user_store.clear()
         self.deny_store.clear()
