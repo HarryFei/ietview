@@ -159,17 +159,19 @@ class IetView:
         target = self.target_store[path][0]
         session = self.iets.sessions[target]
         vol = self.ietv.volumes[session.tid]
+        allow = self.iet_allow.targets[target]
+        deny = self.iet_deny.targets[target]
 
-        response = self.addedit_dialog.run_edit(vol)
+        response = self.addedit_dialog.run_edit(vol=vol,
+                allow=allow, deny=deny)
 
         if response == gtk.RESPONSE_NONE or response == 0:
             return
 
-        old = iet_target.IetTarget(target=vol)
-        old.set_from_active()
+        old = iet_target.IetTarget(vol=vol, allow=allow, deny=deny) 
 
-        new = iet_target.IetTarget(dialog=self.addedit_dialog)
-        new.set_from_dialog()
+        new_target = iet_target.IetTarget(dialog=self.addedit_dialog)
+        new_target.set_from_dialog()
 
         diff = old.diff(right=new)
 
@@ -260,13 +262,13 @@ class IetView:
 
             if target in self.iet_allow.targets:
                 buf.insert(buf.get_end_iter(),
-                           str(self.iet_allow.targets[targets]) + '\n')
+                           str(self.iet_allow.targets[target]) + '\n')
             else:
                 buf.insert(buf.get_end_iter(), '\n')
 
             adm = ietadm.IetAdm()
             params = {}
-            adm.show(params, tid)
+            adm.show(params, tid, sid=0)
             for key in sorted(params.iterkeys()):
                 buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
                 buf.insert(buf.get_end_iter(), ': %s\n' % params[key])

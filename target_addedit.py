@@ -47,6 +47,29 @@ class TargetAddEdit:
         self.lun_view.set_search_column(0)
         self.lun_view.set_reorderable(False)
 
+
+        self.allow_view = self.wTree.get_widget('allow_list')
+        self.allow_view.set_model(self.allow_store)
+        allow_col = gtk.TreeViewColumn('Host or Subnet')
+        allow_cell = gtk.CellRendererText()
+        allow_col.pack_start(allow_cell, True)
+        allow_col.add_attribute(allow_cell, 'text', 0)
+        allow_col.set_sort_column_id(-1)
+        self.allow_view.append_column(allow_col)
+        self.allow_view.set_search_column(0)
+        self.allow_view.set_reorderable(False)
+
+        self.deny_view = self.wTree.get_widget('deny_list')
+        self.deny_view.set_model(self.deny_store)
+        deny_col = gtk.TreeViewColumn('Host or Subnet')
+        deny_cell = gtk.CellRendererText()
+        deny_col.pack_start(deny_cell, True)
+        deny_col.add_attribute(deny_cell, 'text', 0)
+        deny_col.set_sort_column_id(-1)
+        self.deny_view.append_column(deny_col)
+        self.deny_view.set_search_column(0)
+        self.deny_view.set_reorderable(False)
+
     def run_add(self):
         self.tname.set_text('')
         self.active.set_active(True)
@@ -64,7 +87,7 @@ class TargetAddEdit:
 
         return response
 
-    def run_edit(self, vol):
+    def run_edit(self, vol, allow, deny):
         self.tname.set_text(vol.target)
         #TODO: Check config file
 
@@ -79,7 +102,14 @@ class TargetAddEdit:
 
         self.user_store.clear()
         self.deny_store.clear()
+
+        for host in deny:
+            self.deny_store.append([host.strip()])
+
         self.allow_store.clear()
+
+        for host in allow:
+            self.allow_store.append([host.strip()])
 
         response = self.dialog.run()
 
