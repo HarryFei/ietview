@@ -17,7 +17,7 @@
 
 import re
 
-class IetLun:
+class IetLun(object):
     def __init__(self, lun, state, iotype, iomode, path):
         self.lun = lun
         self.state = state
@@ -25,7 +25,7 @@ class IetLun:
         self.iomode = iomode
         self.path = path
 
-class IetVolume:
+class IetVolume(object):
     def __init__(self, tid, target):
         self.tid = tid
         self.target = target
@@ -35,7 +35,7 @@ class IetVolume:
     def add_lun(self, l):
         self.luns[l.lun] = l
 
-class IetVolumes:
+class IetVolumes(object):
     TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
     LUN_REGEX='lun:(?P<lun>\d+)\s+state:(?P<state>\d+)\s+iotype:(?P<iotype>\w+)\s+iomode:(?P<iomode>\w+)\s+path:(?P<path>.+)'
     def __init__(self):

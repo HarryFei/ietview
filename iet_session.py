@@ -17,14 +17,14 @@
 
 import re
 
-class IetSession:
+class IetSession(object):
     def __init__(self, tid, target):
         self.tid = tid
         self.target = target
     
         self.clients = {}
 
-class IetInitiatorClient:
+class IetInitiatorClient(object):
     def __init__(self, sid, initiator):
         self.sid = sid
         self.initiator = initiator
@@ -41,7 +41,7 @@ class IetInitiatorClient:
         self.hd = hd
         self.dd = dd
 
-class IetSessions:
+class IetSessions(object):
     TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
     INITIATOR_REGEX='sid:(?P<sid>\d+)\s+initiator:(?P<init>.+)'
     CLIENT_REGEX='cid:(?P<cid>\d+)\s+ip:(?P<ip>[0-9\.]+)\s+state:(?P<state>\w+)\s+hd:(?P<hd>\w+)\s+dd:(?P<dd>\w+)'

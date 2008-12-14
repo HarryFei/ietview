@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
-class IetTarget:
+class IetTarget(object):
     ADD = 0
     DELETE = 1
     UPDATE = 2

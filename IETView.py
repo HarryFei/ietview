@@ -28,7 +28,7 @@ import iet_conf
 import ietadm
 import target_addedit
 
-class IetView:
+class IetView(object):
     def __init__(self):
         self.gladefile = 'IETView.glade'
         self.wTree = gtk.glade.XML(self.gladefile)
@@ -163,7 +163,7 @@ class IetView:
         deny = self.iet_deny.targets[target]
 
         response = self.addedit_dialog.run_edit(vol=vol,
-                allow=allow, deny=deny)
+                allow=allow, deny=deny, conf=conf)
 
         if response == gtk.RESPONSE_NONE or response == 0:
             return

@@ -15,7 +15,7 @@
 
 import re
 
-class IetAllowDeny:
+class IetAllowDeny(object):
     ALLOWDENY_REGEX='\s*(?P<target>\S+)\s+(?P<hosts>.+)'
     def __init__(self):
         self.targets = {}

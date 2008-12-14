@@ -15,77 +15,122 @@
 
 import re
 
-class IetConfLun:
+class IetConfLun(object):
     def __init__(self, number, path, type, **kwargs):
         self.number = number
         self.type = type
         self.path = path
         
-    def write(self, f):
-        f.write('\tLun %d Path=%s,Type=%s\n' % (self.number, self.path, self.type))
+    def write(self, f, prepend=''):
+        f.write('%s\tLun %d Path=%s,Type=%s\n'
+                % (prepend, self.number, self.path, self.type))
 
-class IetConfTarget:
+
+class IetConfTarget(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.luns = {}
-        self.options = {}
+        self.users = {}
+        self.options = []
 
-        for kw in kwargs: options[kw] = kwargs[kw]
+        for kw, val in kwargs.iteritems():
+            options.append((kw, val))
         
-    def add_lun(self, number, path, type, **keys):
-        self.luns[number] = IETConfLun(number, path, type, **kwargs)
+    def add_lun(self, number, path, type, **kwargs):
+        self.luns[number] = IetConfLun(number, path, type, **kwargs)
 
-    def write(self, f):
-        f.write('Target %s\n' % self.name)
+    def write(self, f, prepend=''):
+        f.write('%sTarget %s\n' % (prepend, self.name))
 
         for lun in self.luns.itervalues():
-            lun.write(f)
+            lun.write(f, prepend)
 
-        for key, val in self.options.iteritems():
-            f.write('\t%s %s\n' % (key, ' '.join(val)))
+        for user, passwd in self.users.iteritems():
+            f.write('%s\tIncomingUser %s %s\n' % (prepend, user, passwd))
 
-class IetConfFile:
+        for key, val in self.options:
+            if type(val) == str:
+                f.write('%s\t%s %s\n' % (prepend, key, val))
+            else:
+                f.write('%s\t%s %s\n' % (prepend, key, ' '.join(val)))
+
+class IetConfFile(object):
     TARGET_REGEX='Target\s+(?P<target>\S+)'
     CMNT_TARGET_REGEX='\s*#\s*Target\s+(?P<target>\S+)'
     LUN_REGEX='Lun\s+(?P<lun>\d+)\s+Path=(?P<path>[^ \t\n\r\f\v,]+)\s*,\s*Type\s*=\s*(?P<iotype>\w+)'
     OPTION_REGEX='\s*(?P<key>\S+)\s+(?P<value>\S+)'
     USERPASS_REGEX='\s*(?P<key>\S+)\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
+    IN_USERPASS_REGEX='\s*IncomingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
+    OUT_USERPASS_REGEX='\s*OutgoingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
 
     def __init__(self):
         self.targets = {}
-        self.options = {}
+        self.users = {}
+        self.options = []
         self.inactive_targets = {}
 
     def add_target(self, name, **kwargs):
-        self.targets[name] = IETConfTarget(name, **kwargs)
+        self.targets[name] = IetConfTarget(name, **kwargs)
 
     def write(self, filename):
         f = file(filename, 'w')
 
-        for key, val in self.options.iteritems():
-            f.write('%s %s\n' % (key, ' '.join(val)))
+        f.write('# Written by IETView.py\n')
+        f.write('# Global discovery options\n')
+        for key, val in self.options:
+            if type(val) == str:
+                f.write('%s %s\n' % (key, val))
+            else:
+                f.write('%s %s\n' % (key, ' '.join(val)))
 
+        f.write('\n')
+
+        f.write('# Global discovery users\n')    
+        for user, passwd in self.users.iteritems():
+            f.write('IncomingUser %s %s\n' % (user, passwd))
+
+        f.write('\n')
+
+        f.write('# Active targets\n')
         for target in self.targets.itervalues():
             target.write(f)
+            f.write('\n')
+
+        f.write('# Inactive targets\n')
+        for target in self.inactive_targets.itervalues():
+            target.write(f, prepend='#')
+            f.write('\n')
+
+        f.close()
 
     def parse(self, filename):
         f = file(filename, 'r')
 
-        state = 0 
+        # state = -1: haven't seen a target yet
+        # state = 0: active (uncommented) target
+        # state = 1: inactive (commented) target
+        state = -1 
         current_target = None
 
         #TODO: Deal with split lines.
         for line in f:
-            if '#' in line: continue
+            m = re.search(self.CMNT_TARGET_REGEX, line)
+            if m:
+                current_target = IetConfTarget(m.group('target'))
+                self.inactive_targets[current_target.name] = current_target
+                state = 1
+                continue
+
+            # Ignore any commented out lines in active targets
+            if state < 1 and '#' in line:
+                continue
 
             #TODO: Make case insensitive
             m = re.search(self.TARGET_REGEX, line)
-
             if m:
-                if current_target:
-                    self.targets[current_target.name] = current_target
-
                 current_target = IetConfTarget(m.group('target'))
+                self.targets[current_target.name] = current_target
+                state = 0
                 continue
 
             #TODO: Make case insensitive
@@ -98,24 +143,34 @@ class IetConfFile:
         
                 continue
         
+                   
+            m = re.match(self.IN_USERPASS_REGEX, line)
+            if m:
+                if current_target:
+                    current_target.users[m.group('uname')] = m.group('pass')
+                else:
+                    self.users[m.group('uname')] = m.group('pass')
+
+                continue
+ 
+            m = re.match(self.OUT_USERPASS_REGEX, line)
+            if m:
+                if current_target:
+                    current_target.options.append(('OutgoingUser', (m.group('uname'), m.group('pass'))))
+                else:
+                    self.options.append(('OutgoingUser', (m.group('uname'),
+                                                    m.group('pass'))))
+
+                continue
+
             m = re.match(self.OPTION_REGEX, line)
             if m:
                 if current_target:
-                    current_target.options[m.group('key')] = m.group('value')
+                    current_target.options.append((m.group('key'), m.group('value')))
                 else:
-                    self.options[m.group('key')] = m.group('value')
-                    
-            m = re.match(self.USERPASS_REGEX, line)
-            if m:
-                if current_target:
-                    current_target.options[m.group('key')] = (m.group('uname'),
-                                                              m.group('pass'))
-                else:
-                    self.options[m.group('key')] = (m.group('uname'),
-                                                    m.group('pass'))
+                    self.options.append((m.group('key'), m.group('value')))
+
+                continue
         
         f.close()
-
-        if current_target: self.targets[current_target.name] = current_target
-
 

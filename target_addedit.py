@@ -15,7 +15,7 @@
 
 import gtk
 
-class TargetAddEdit:
+class TargetAddEdit(object):
     def __init__(self, widgets):
         self.wTree = widgets
         self.option_store = gtk.ListStore(str, str)
@@ -28,6 +28,8 @@ class TargetAddEdit:
         self.active = self.wTree.get_widget('addedit_active')
         self.saved = self.wTree.get_widget('addedit_saved')
         self.dialog = self.wTree.get_widget('target_addedit_dialog')
+
+        # Set up LUN Table
         self.lun_view = self.wTree.get_widget('lun_list')
         self.lun_view.set_model(self.lun_store)
         lun_col = gtk.TreeViewColumn('Path')
@@ -43,11 +45,11 @@ class TargetAddEdit:
         lun_col.add_attribute(lun_cell, 'text', 1)
         lun_col.set_sort_column_id(-1)
         self.lun_view.append_column(lun_col)
- 
+
         self.lun_view.set_search_column(0)
         self.lun_view.set_reorderable(False)
 
-
+        # Set up initiators.allow table
         self.allow_view = self.wTree.get_widget('allow_list')
         self.allow_view.set_model(self.allow_store)
         allow_col = gtk.TreeViewColumn('Host or Subnet')
@@ -58,7 +60,9 @@ class TargetAddEdit:
         self.allow_view.append_column(allow_col)
         self.allow_view.set_search_column(0)
         self.allow_view.set_reorderable(False)
+        self.allow_view.set_headers_visible(False)
 
+        # Set up initiators.deny table
         self.deny_view = self.wTree.get_widget('deny_list')
         self.deny_view.set_model(self.deny_store)
         deny_col = gtk.TreeViewColumn('Host or Subnet')
@@ -69,6 +73,20 @@ class TargetAddEdit:
         self.deny_view.append_column(deny_col)
         self.deny_view.set_search_column(0)
         self.deny_view.set_reorderable(False)
+        self.deny_view.set_headers_visible(False)
+
+        # Set up incoming users table
+        self.user_view = self.wTree.get_widget('user_list')
+        self.user_view.set_model(self.user_store)
+        user_col = gtk.TreeViewColumn('Host or Subnet')
+        user_cell = gtk.CellRendererText()
+        user_col.pack_start(user_cell, True)
+        user_col.add_attribute(user_cell, 'text', 0)
+        user_col.set_sort_column_id(-1)
+        self.user_view.append_column(user_col)
+        self.user_view.set_search_column(0)
+        self.user_view.set_reorderable(False)
+        self.user_view.set_headers_visible(False)
 
     def run_add(self):
         self.tname.set_text('')
@@ -87,7 +105,7 @@ class TargetAddEdit:
 
         return response
 
-    def run_edit(self, vol, allow, deny):
+    def run_edit(self, vol, allow, deny, conf):
         self.tname.set_text(vol.target)
         #TODO: Check config file
 
