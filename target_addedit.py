@@ -20,7 +20,7 @@ class TargetAddEdit(object):
         self.wTree = widgets
         self.option_store = gtk.ListStore(str, str)
         self.lun_store = gtk.ListStore(str, str)
-        self.user_store = gtk.ListStore(str)
+        self.user_store = gtk.ListStore(str, str)
         self.deny_store = gtk.ListStore(str)
         self.allow_store = gtk.ListStore(str)
 
@@ -78,15 +78,22 @@ class TargetAddEdit(object):
         # Set up incoming users table
         self.user_view = self.wTree.get_widget('user_list')
         self.user_view.set_model(self.user_store)
-        user_col = gtk.TreeViewColumn('Host or Subnet')
+        user_col = gtk.TreeViewColumn('Username')
         user_cell = gtk.CellRendererText()
         user_col.pack_start(user_cell, True)
         user_col.add_attribute(user_cell, 'text', 0)
         user_col.set_sort_column_id(-1)
         self.user_view.append_column(user_col)
+
+        user_col = gtk.TreeViewColumn('Password')
+        user_cell = gtk.CellRendererText()
+        user_col.pack_start(user_cell, True)
+        user_col.add_attribute(user_cell, 'text', 1)
+        user_col.set_sort_column_id(-1)
+        self.user_view.append_column(user_col)
+
         self.user_view.set_search_column(0)
         self.user_view.set_reorderable(False)
-        self.user_view.set_headers_visible(False)
 
     def run_add(self):
         self.tname.set_text('')
@@ -107,7 +114,7 @@ class TargetAddEdit(object):
 
     def run_edit(self, vol, allow, deny, conf):
         self.tname.set_text(vol.target)
-        #TODO: Check config file
+        #TODO: Allow editing of inactive targets
 
         self.active.set_active(True)
         self.saved.set_active(True)
@@ -119,13 +126,14 @@ class TargetAddEdit(object):
             self.lun_store.append([lun.path, lun.iotype])
 
         self.user_store.clear()
-        self.deny_store.clear()
+        for user, passwd in conf.users.iteritems():
+            self.user_store.append([user, passwd])
 
+        self.deny_store.clear()
         for host in deny:
             self.deny_store.append([host.strip()])
 
         self.allow_store.clear()
-
         for host in allow:
             self.allow_store.append([host.strip()])
 

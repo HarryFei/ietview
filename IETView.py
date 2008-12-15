@@ -161,6 +161,7 @@ class IetView(object):
         vol = self.ietv.volumes[session.tid]
         allow = self.iet_allow.targets[target]
         deny = self.iet_deny.targets[target]
+        conf = self.ietc.targets[target]
 
         response = self.addedit_dialog.run_edit(vol=vol,
                 allow=allow, deny=deny, conf=conf)
