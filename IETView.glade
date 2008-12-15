@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Dec  9 09:49:03 2008 -->
+<!--Generated with glade3 3.4.5 on Sun Dec 14 22:12:03 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="main_window">
     <property name="visible">True</property>
@@ -252,7 +252,7 @@
                           <widget class="GtkHBox" id="hbox8">
                             <property name="visible">True</property>
                             <child>
-                              <widget class="GtkTreeView" id="treeview5">
+                              <widget class="GtkTreeView" id="option_list">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                               </widget>

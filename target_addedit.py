@@ -95,6 +95,27 @@ class TargetAddEdit(object):
         self.user_view.set_search_column(0)
         self.user_view.set_reorderable(False)
 
+
+        # Set up options table
+        self.option_view = self.wTree.get_widget('option_list')
+        self.option_view.set_model(self.option_store)
+        option_col = gtk.TreeViewColumn('Key')
+        option_cell = gtk.CellRendererText()
+        option_col.pack_start(option_cell, True)
+        option_col.add_attribute(option_cell, 'text', 0)
+        option_col.set_sort_column_id(-1)
+        self.option_view.append_column(option_col)
+
+        option_col = gtk.TreeViewColumn('Value')
+        option_cell = gtk.CellRendererText()
+        option_col.pack_start(option_cell, True)
+        option_col.add_attribute(option_cell, 'text', 1)
+        option_col.set_sort_column_id(-1)
+        self.option_view.append_column(option_col)
+
+        self.option_view.set_search_column(0)
+        self.option_view.set_reorderable(False)
+
     def run_add(self):
         self.tname.set_text('')
         self.active.set_active(True)
@@ -119,9 +140,16 @@ class TargetAddEdit(object):
         self.active.set_active(True)
         self.saved.set_active(True)
 
+        #TODO: Have to compare config options with runtime options
+        # from ietadm, and somehow display that.
         self.option_store.clear()
+        for key, val in conf.options:
+            if type(val) == str:
+                self.option_store.append([key, val])
+            else:
+                self.option_store.append([key, '%s/%s'%val])
+        
         self.lun_store.clear()
-
         for lun in vol.luns.itervalues():
             self.lun_store.append([lun.path, lun.iotype])
 
