@@ -289,7 +289,14 @@ class TargetAddEdit(object):
         pass
 
     def add_deny(self, button):
-        pass
+        allowdeny_addedit = self.wTree.get_widget('allowdeny_addedit_dialog')
+
+        response = allowdeny_addedit.run()
+        allowdeny_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            pass
 
     def edit_deny(self, button):
         pass
@@ -305,5 +312,22 @@ class TargetAddEdit(object):
 
     def delete_allow(self, button):
         pass
- 
+
+    def allowdeny_type_changed(self, combo):
+        allowdeny_net = self.wTree.get_widget('allowdeny_net')
+        allowdeny_mask = self.wTree.get_widget('allowdeny_mask')
+
+        if combo.get_active_text() == 'ALL':
+            allowdeny_net.set_text('ALL')
+            allowdeny_net.set_sensitive(False)
+            allowdeny_mask.set_text('')
+            allowdeny_mask.set_sensitive(False)
+        elif combo.get_active_text() in ['IPv4 Host', 'IPv6 Host']:
+            allowdeny_net.set_sensitive(True)
+            allowdeny_mask.set_text('')
+            allowdeny_mask.set_sensitive(False)
+        else:
+            allowdeny_net.set_sensitive(True)
+            allowdeny_mask.set_sensitive(True)
+
 
