@@ -43,7 +43,6 @@ class IetView(object):
         self.reload_sessions()
         self.target_list = self.wTree.get_widget('session_tree')
 
-        #self.target_list.connect('cursor-changed', self.cursor_changed)
         self.target_list.set_model(self.target_store)
         self.tvcolumn = gtk.TreeViewColumn('iSCSI Targets')
         self.target_list.append_column(self.tvcolumn)
@@ -56,13 +55,10 @@ class IetView(object):
 
         self.target_details = self.wTree.get_widget('session_view')
         self.add_button = self.wTree.get_widget('target_add')
-        #self.add_button.connect('clicked', self.add_target)
         self.edit_button = self.wTree.get_widget('target_edit')
         self.edit_button.set_sensitive(False)
-        #self.edit_button.connect('clicked', self.edit_target)
         self.delete_button = self.wTree.get_widget('target_delete')
         self.delete_button.set_sensitive(False)
-        #self.delete_button.connect('clicked', self.delete_target)
 
         self.addedit_dialog = target_addedit.TargetAddEdit(self.wTree)
 
@@ -73,7 +69,20 @@ class IetView(object):
                 'lun_add_clicked_cb' : self.addedit_dialog.add_lun,
                 'lun_edit_clicked_cb' : self.addedit_dialog.edit_lun,
                 'lun_delete_clicked_cb' : self.addedit_dialog.delete_lun,
-                'lun_browse_clicked_cb' : self.addedit_dialog.path_browse_lun
+                'lun_browse_clicked_cb' : self.addedit_dialog.path_browse_lun,
+                'option_add_clicked_cb' : self.addedit_dialog.add_option,
+                'option_edit_clicked_cb' : self.addedit_dialog.edit_option,
+                'option_delete_clicked_cb' : self.addedit_dialog.delete_option,
+                'user_add_clicked_cb' : self.addedit_dialog.add_user,
+                'user_edit_clicked_cb' : self.addedit_dialog.edit_user,
+                'user_delete_clicked_cb' : self.addedit_dialog.delete_user,
+                'deny_add_clicked_cb' : self.addedit_dialog.add_deny,
+                'deny_edit_clicked_cb' : self.addedit_dialog.edit_deny,
+                'deny_delete_clicked_cb' : self.addedit_dialog.delete_deny,
+                'allow_add_clicked_cb' : self.addedit_dialog.add_allow,
+                'allow_edit_clicked_cb' : self.addedit_dialog.edit_allow,
+                'allow_delete_clicked_cb' : self.addedit_dialog.delete_allow,
+                'option_name_changed_cb': self.addedit_dialog.option_changed
               }
 
         self.wTree.signal_autoconnect (dic)

@@ -235,6 +235,75 @@ class TargetAddEdit(object):
 
         if response == 1: lun_path.set_text(lun_browse.get_filename())
 
+    def add_option(self, button):
+        option_addedit = self.wTree.get_widget('option_addedit_dialog')
+        option_name = self.wTree.get_widget('option_name')
+        option_value = self.wTree.get_widget('option_value')
+        option_password = self.wTree.get_widget('option_password')
+        option_password_label = self.wTree.get_widget('option_password_label')
+
+        option_name.set_active(-1)
+        option_value.set_text('')
+        option_password.set_text('')
+        option_password.hide()
+        option_password_label.hide()
+
+        response = option_addedit.run()
+        option_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            if option_name.get_active_text() == 'OutgoingUser':
+                self.option_store.append([ option_name.get_active_text(), '%s/%s' % (option_value.get_text(), option_password.get_text()) ])
+            else:
+                self.option_store.append([ option_name.get_active_text(), option_value.get_text() ])
 
 
+    def edit_option(self, button):
+        pass
+
+    def delete_option(self, button):
+        pass
+
+    def option_changed(self, combo):
+        option_password = self.wTree.get_widget('option_password')
+        option_value_label = self.wTree.get_widget('option_value_label')
+        option_password_label = self.wTree.get_widget('option_password_label')
+
+        if combo.get_active_text() == 'OutgoingUser':
+            option_value_label.set_text('Username:')
+            option_password.show()
+            option_password_label.show()
+        else:
+            option_value_label.set_text('Value:')
+            option_password.hide()
+            option_password_label.hide()
+
+    def add_user(self, button):
+        pass
+
+    def edit_user(self, button):
+        pass
+
+    def delete_user(self, button):
+        pass
+
+    def add_deny(self, button):
+        pass
+
+    def edit_deny(self, button):
+        pass
+
+    def delete_deny(self, button):
+        pass
+
+    def add_allow(self, button):
+        pass
+
+    def edit_allow(self, button):
+        pass
+
+    def delete_allow(self, button):
+        pass
+ 
 

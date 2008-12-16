@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sun Dec 14 22:12:03 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Dec 15 22:10:48 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="main_window">
     <property name="visible">True</property>
@@ -262,36 +262,39 @@
                                 <property name="visible">True</property>
                                 <property name="layout_style">GTK_BUTTONBOX_START</property>
                                 <child>
-                                  <widget class="GtkButton" id="button13">
+                                  <widget class="GtkButton" id="option_add">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-add</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="option_add_clicked_cb"/>
                                   </widget>
                                 </child>
                                 <child>
-                                  <widget class="GtkButton" id="button14">
+                                  <widget class="GtkButton" id="option_edit">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-edit</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="option_edit_clicked_cb"/>
                                   </widget>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkButton" id="button15">
+                                  <widget class="GtkButton" id="option_delete">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-delete</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="option_delete_clicked_cb"/>
                                   </widget>
                                   <packing>
                                     <property name="position">2</property>
@@ -422,36 +425,39 @@
                     <property name="visible">True</property>
                     <property name="layout_style">GTK_BUTTONBOX_START</property>
                     <child>
-                      <widget class="GtkButton" id="button4">
+                      <widget class="GtkButton" id="user_add">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="label" translatable="yes">gtk-add</property>
                         <property name="use_stock">True</property>
                         <property name="response_id">0</property>
+                        <signal name="clicked" handler="user_add_clicked_cb"/>
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkButton" id="button5">
+                      <widget class="GtkButton" id="user_edit">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="label" translatable="yes">gtk-edit</property>
                         <property name="use_stock">True</property>
                         <property name="response_id">0</property>
+                        <signal name="clicked" handler="user_edit_clicked_cb"/>
                       </widget>
                       <packing>
                         <property name="position">1</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkButton" id="button6">
+                      <widget class="GtkButton" id="user_delete">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="label" translatable="yes">gtk-delete</property>
                         <property name="use_stock">True</property>
                         <property name="response_id">0</property>
+                        <signal name="clicked" handler="user_delete_clicked_cb"/>
                       </widget>
                       <packing>
                         <property name="position">2</property>
@@ -505,36 +511,39 @@
                                 <property name="visible">True</property>
                                 <property name="layout_style">GTK_BUTTONBOX_START</property>
                                 <child>
-                                  <widget class="GtkButton" id="button7">
+                                  <widget class="GtkButton" id="deny_add">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-add</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="deny_add_clicked_cb"/>
                                   </widget>
                                 </child>
                                 <child>
-                                  <widget class="GtkButton" id="button8">
+                                  <widget class="GtkButton" id="deny_edit">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-edit</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="deny_edit_clicked_cb"/>
                                   </widget>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkButton" id="button9">
+                                  <widget class="GtkButton" id="deny_delete">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-delete</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="deny_delete_clicked_cb"/>
                                   </widget>
                                   <packing>
                                     <property name="position">2</property>
@@ -594,36 +603,39 @@
                                 <property name="visible">True</property>
                                 <property name="layout_style">GTK_BUTTONBOX_START</property>
                                 <child>
-                                  <widget class="GtkButton" id="button10">
+                                  <widget class="GtkButton" id="allow_add">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-add</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="allow_add_clicked_cb"/>
                                   </widget>
                                 </child>
                                 <child>
-                                  <widget class="GtkButton" id="button11">
+                                  <widget class="GtkButton" id="allow_edit">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-edit</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="allow_edit_clicked_cb"/>
                                   </widget>
                                   <packing>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkButton" id="button12">
+                                  <widget class="GtkButton" id="allow_delete">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">gtk-delete</property>
                                     <property name="use_stock">True</property>
                                     <property name="response_id">0</property>
+                                    <signal name="clicked" handler="allow_delete_clicked_cb"/>
                                   </widget>
                                   <packing>
                                     <property name="position">2</property>
@@ -884,6 +896,298 @@
             </child>
             <child>
               <widget class="GtkButton" id="lun_browse_cancel">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-cancel</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+              </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">GTK_PACK_END</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+  <widget class="GtkDialog" id="user_addedit_dialog">
+    <property name="border_width">5</property>
+    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="has_separator">False</property>
+    <child internal-child="vbox">
+      <widget class="GtkVBox" id="dialog-vbox5">
+        <property name="visible">True</property>
+        <property name="spacing">2</property>
+        <child>
+          <widget class="GtkTable" id="table1">
+            <property name="visible">True</property>
+            <property name="n_rows">2</property>
+            <property name="n_columns">2</property>
+            <child>
+              <widget class="GtkLabel" id="label7">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Password:</property>
+              </widget>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="label4">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Username:</property>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkEntry" id="user_password">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkEntry" id="user_name">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <widget class="GtkHButtonBox" id="dialog-action_area5">
+            <property name="visible">True</property>
+            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <child>
+              <widget class="GtkButton" id="user_addedit_ok">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-ok</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">1</property>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkButton" id="user_addedit_cancel">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-cancel</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+              </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">GTK_PACK_END</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+  <widget class="GtkDialog" id="allowdeny_addedit_dialog">
+    <property name="border_width">5</property>
+    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="has_separator">False</property>
+    <child internal-child="vbox">
+      <widget class="GtkVBox" id="dialog-vbox6">
+        <property name="visible">True</property>
+        <property name="spacing">2</property>
+        <child>
+          <widget class="GtkHBox" id="hbox3">
+            <property name="visible">True</property>
+            <child>
+              <widget class="GtkLabel" id="label8">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Host:</property>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkEntry" id="entry1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <widget class="GtkHButtonBox" id="dialog-action_area6">
+            <property name="visible">True</property>
+            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <child>
+              <widget class="GtkButton" id="button1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-ok</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">1</property>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkButton" id="button2">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-cancel</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+              </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">GTK_PACK_END</property>
+          </packing>
+        </child>
+      </widget>
+    </child>
+  </widget>
+  <widget class="GtkDialog" id="option_addedit_dialog">
+    <property name="border_width">5</property>
+    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
+    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+    <property name="has_separator">False</property>
+    <child internal-child="vbox">
+      <widget class="GtkVBox" id="dialog-vbox7">
+        <property name="visible">True</property>
+        <property name="spacing">2</property>
+        <child>
+          <widget class="GtkTable" id="table2">
+            <property name="visible">True</property>
+            <property name="n_rows">3</property>
+            <property name="n_columns">2</property>
+            <child>
+              <widget class="GtkLabel" id="option_password_label">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Password:</property>
+              </widget>
+              <packing>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkComboBox" id="option_name">
+                <property name="visible">True</property>
+                <property name="items" translatable="yes">OutgoingUser
+Alias
+MaxConnections
+ImmediateData
+MaxRecvDataSegmentLength
+MaxXmitDataSegmentLength
+MaxBurstLength
+FirstBurstLength
+DefaultTime2Wait
+DefaultTime2Retain
+MaxOutstandingR2T
+DataPDUInOrder
+DataSequenceInOrder
+ErrorRecoveryLevel
+HeaderDigest
+DataDigest
+Wthreads</property>
+                <signal name="changed" handler="option_name_changed_cb"/>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkEntry" id="option_password">
+                <property name="can_focus">True</property>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkEntry" id="option_value">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="option_value_label">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Value:</property>
+              </widget>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="label11">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Option:</property>
+              </widget>
+            </child>
+          </widget>
+          <packing>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <widget class="GtkHButtonBox" id="dialog-action_area7">
+            <property name="visible">True</property>
+            <property name="layout_style">GTK_BUTTONBOX_END</property>
+            <child>
+              <widget class="GtkButton" id="button3">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-ok</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">1</property>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkButton" id="button4">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
