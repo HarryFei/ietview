@@ -1,0 +1,4 @@
+- Clicking X on addedit dialog causes something to happen.  Should be equivalent to cancel.
+- Hitting enter in text fields on some dialogs (e.g. deny addedit) should be equ
+ivalent to OK
+

@@ -30,91 +30,91 @@ class TargetAddEdit(object):
         self.dialog = self.wTree.get_widget('target_addedit_dialog')
 
         # Set up LUN Table
-        self.lun_view = self.wTree.get_widget('lun_list')
-        self.lun_view.set_model(self.lun_store)
+        self.lun_list = self.wTree.get_widget('lun_list')
+        self.lun_list.set_model(self.lun_store)
         lun_col = gtk.TreeViewColumn('Path')
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 0)
         lun_col.set_sort_column_id(-1)
-        self.lun_view.append_column(lun_col)
+        self.lun_list.append_column(lun_col)
 
         lun_col = gtk.TreeViewColumn('Type')
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 1)
         lun_col.set_sort_column_id(-1)
-        self.lun_view.append_column(lun_col)
+        self.lun_list.append_column(lun_col)
 
-        self.lun_view.set_search_column(0)
-        self.lun_view.set_reorderable(False)
+        self.lun_list.set_search_column(0)
+        self.lun_list.set_reorderable(False)
 
         # Set up initiators.allow table
-        self.allow_view = self.wTree.get_widget('allow_list')
-        self.allow_view.set_model(self.allow_store)
+        self.allow_list = self.wTree.get_widget('allow_list')
+        self.allow_list.set_model(self.allow_store)
         allow_col = gtk.TreeViewColumn('Host or Subnet')
         allow_cell = gtk.CellRendererText()
         allow_col.pack_start(allow_cell, True)
         allow_col.add_attribute(allow_cell, 'text', 0)
         allow_col.set_sort_column_id(-1)
-        self.allow_view.append_column(allow_col)
-        self.allow_view.set_search_column(0)
-        self.allow_view.set_reorderable(False)
-        self.allow_view.set_headers_visible(False)
+        self.allow_list.append_column(allow_col)
+        self.allow_list.set_search_column(0)
+        self.allow_list.set_reorderable(False)
+        self.allow_list.set_headers_visible(False)
 
         # Set up initiators.deny table
-        self.deny_view = self.wTree.get_widget('deny_list')
-        self.deny_view.set_model(self.deny_store)
+        self.deny_list = self.wTree.get_widget('deny_list')
+        self.deny_list.set_model(self.deny_store)
         deny_col = gtk.TreeViewColumn('Host or Subnet')
         deny_cell = gtk.CellRendererText()
         deny_col.pack_start(deny_cell, True)
         deny_col.add_attribute(deny_cell, 'text', 0)
         deny_col.set_sort_column_id(-1)
-        self.deny_view.append_column(deny_col)
-        self.deny_view.set_search_column(0)
-        self.deny_view.set_reorderable(False)
-        self.deny_view.set_headers_visible(False)
+        self.deny_list.append_column(deny_col)
+        self.deny_list.set_search_column(0)
+        self.deny_list.set_reorderable(False)
+        self.deny_list.set_headers_visible(False)
 
         # Set up incoming users table
-        self.user_view = self.wTree.get_widget('user_list')
-        self.user_view.set_model(self.user_store)
+        self.user_list = self.wTree.get_widget('user_list')
+        self.user_list.set_model(self.user_store)
         user_col = gtk.TreeViewColumn('Username')
         user_cell = gtk.CellRendererText()
         user_col.pack_start(user_cell, True)
         user_col.add_attribute(user_cell, 'text', 0)
         user_col.set_sort_column_id(-1)
-        self.user_view.append_column(user_col)
+        self.user_list.append_column(user_col)
 
         user_col = gtk.TreeViewColumn('Password')
         user_cell = gtk.CellRendererText()
         user_col.pack_start(user_cell, True)
         user_col.add_attribute(user_cell, 'text', 1)
         user_col.set_sort_column_id(-1)
-        self.user_view.append_column(user_col)
+        self.user_list.append_column(user_col)
 
-        self.user_view.set_search_column(0)
-        self.user_view.set_reorderable(False)
+        self.user_list.set_search_column(0)
+        self.user_list.set_reorderable(False)
 
 
         # Set up options table
-        self.option_view = self.wTree.get_widget('option_list')
-        self.option_view.set_model(self.option_store)
+        self.option_list = self.wTree.get_widget('option_list')
+        self.option_list.set_model(self.option_store)
         option_col = gtk.TreeViewColumn('Key')
         option_cell = gtk.CellRendererText()
         option_col.pack_start(option_cell, True)
         option_col.add_attribute(option_cell, 'text', 0)
         option_col.set_sort_column_id(-1)
-        self.option_view.append_column(option_col)
+        self.option_list.append_column(option_col)
 
         option_col = gtk.TreeViewColumn('Value')
         option_cell = gtk.CellRendererText()
         option_col.pack_start(option_cell, True)
         option_col.add_attribute(option_cell, 'text', 1)
         option_col.set_sort_column_id(-1)
-        self.option_view.append_column(option_col)
+        self.option_list.append_column(option_col)
 
-        self.option_view.set_search_column(0)
-        self.option_view.set_reorderable(False)
+        self.option_list.set_search_column(0)
+        self.option_list.set_reorderable(False)
 
     def run_add(self):
         self.tname.set_text('')
@@ -192,7 +192,7 @@ class TargetAddEdit(object):
             self.lun_store.append([ lun_path.get_text(), type ])
         
     def edit_lun(self, button):
-        path, col = self.lun_view.get_cursor()
+        path, col = self.lun_list.get_cursor()
         if path == None: return
 
         path = path[0]
@@ -221,8 +221,9 @@ class TargetAddEdit(object):
  
 
     def delete_lun(self, button):
-        path, col = self.lun_view.get_cursor()
-        if path == None: return
+        path, col = self.lun_list.get_cursor()
+        if path == None:
+            return
 
         path = path[0]
         del self.lun_store[path]
@@ -233,7 +234,8 @@ class TargetAddEdit(object):
         response = lun_browse.run()
         lun_browse.hide()
 
-        if response == 1: lun_path.set_text(lun_browse.get_filename())
+        if response == 1:
+            lun_path.set_text(lun_browse.get_filename())
 
     def add_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
@@ -290,19 +292,85 @@ class TargetAddEdit(object):
 
     def add_deny(self, button):
         allowdeny_addedit = self.wTree.get_widget('allowdeny_addedit_dialog')
+        allowdeny_net = self.wTree.get_widget('allowdeny_net')
+        allowdeny_mask = self.wTree.get_widget('allowdeny_mask')
+        allowdeny_type = self.wTree.get_widget('allowdeny_type')
+
+        allowdeny_type.set_active(-1)
+        allowdeny_net.set_text('')
+        allowdeny_net.set_sensitive(False)
+        allowdeny_mask.set_text('')
+        allowdeny_mask.set_sensitive(False)
 
         response = allowdeny_addedit.run()
         allowdeny_addedit.hide()
 
         if response == 1:
             #TODO: validate input
-            pass
+            if allowdeny_type.get_active() in [1, 3]:
+                self.deny_store.append(['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())])
+            else:
+                self.deny_store.append([allowdeny_net.get_text()])
 
     def edit_deny(self, button):
-        pass
+        allowdeny_addedit = self.wTree.get_widget('allowdeny_addedit_dialog')
+        allowdeny_net = self.wTree.get_widget('allowdeny_net')
+        allowdeny_mask = self.wTree.get_widget('allowdeny_mask')
+        allowdeny_type = self.wTree.get_widget('allowdeny_type')
+
+        path, col = self.deny_list.get_cursor()
+        if path == None:
+            return
+
+        deny = self.deny_store[path][0]
+
+        if deny == 'ALL':
+            allowdeny_type.set_active(4)
+        elif '/' in deny:
+            net, mask = deny.split('/')
+
+            if ':' in net:
+                allowdeny_type.set_active(3)
+            else:
+                allowdeny_type.set_active(1)
+
+            allowdeny_net.set_text(net)
+            allowdeny_mask.set_text(mask)
+
+        elif ':' in deny:
+            allowdeny_type.set_active(2)
+            allowdeny_net.set_text(deny)
+        else:
+            allowdeny_type.set_active(0)
+            allowdeny_net.set_text(deny)
+
+        self.allowdeny_type_changed(allowdeny_type)
+        response = allowdeny_addedit.run()
+        allowdeny_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            if allowdeny_type.get_active() in [1, 3]:
+                self.deny_store[path] = ['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())]
+            else:
+                self.deny_store[path] = [allowdeny_net.get_text()]
 
     def delete_deny(self, button):
-        pass
+        path, col = self.deny_list.get_cursor()
+        if path == None:
+            return
+
+        deny = self.deny_store[path][0]
+
+        msg = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_YES_NO, message_format='Delete this entry?\n%s'%deny)
+
+        response = msg.run()
+
+        if response == gtk.RESPONSE_YES:
+            del self.deny_store[path]
+
+        msg.destroy()
+
 
     def add_allow(self, button):
         pass
@@ -314,20 +382,31 @@ class TargetAddEdit(object):
         pass
 
     def allowdeny_type_changed(self, combo):
+        # 0) IPv4 Host
+        # 1) IPv4 Subnet
+        # 2) IPv6 Host
+        # 3) IPv6 Subnet
+        # 4) ALL
         allowdeny_net = self.wTree.get_widget('allowdeny_net')
         allowdeny_mask = self.wTree.get_widget('allowdeny_mask')
 
-        if combo.get_active_text() == 'ALL':
+        if combo.get_active() == 4:
             allowdeny_net.set_text('ALL')
             allowdeny_net.set_sensitive(False)
             allowdeny_mask.set_text('')
             allowdeny_mask.set_sensitive(False)
-        elif combo.get_active_text() in ['IPv4 Host', 'IPv6 Host']:
+        elif combo.get_active() in [0, 2]:
             allowdeny_net.set_sensitive(True)
             allowdeny_mask.set_text('')
             allowdeny_mask.set_sensitive(False)
-        else:
+        elif combo.get_active() in [1, 3]:
             allowdeny_net.set_sensitive(True)
             allowdeny_mask.set_sensitive(True)
+        else:
+            allowdeny_net.set_text('')
+            allowdeny_net.set_sensitive(False)
+            allowdeny_mask.set_text('')
+            allowdeny_mask.set_sensitive(False)
+
 
 
