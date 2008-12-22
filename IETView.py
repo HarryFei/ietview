@@ -40,9 +40,7 @@ class IetView(object):
 
         self.target_store = gtk.TreeStore(str, str)
 
-        self.reload_sessions()
         self.target_list = self.wTree.get_widget('session_tree')
-
         self.target_list.set_model(self.target_store)
         self.tvcolumn = gtk.TreeViewColumn('iSCSI Targets')
         self.target_list.append_column(self.tvcolumn)
@@ -81,7 +79,8 @@ class IetView(object):
               }
 
         self.wTree.signal_autoconnect (dic)
-        self.target_list.expand_row((0), False)
+
+        self.reload_sessions()
 
     def reload_sessions(self):
         self.target_store.clear()
@@ -114,6 +113,8 @@ class IetView(object):
         self.iet_deny = iet_allowdeny.IetAllowDeny()
         self.iet_deny.parse('/etc/initiators.deny')
 
+        self.target_list.expand_row((0), False)
+
     def delete_target(self, button):
         path, col = self.target_list.get_cursor()
         if path == None: return
@@ -141,18 +142,37 @@ class IetView(object):
         tname = self.addedit_dialog.tname.get_text()
         print 'Operation:', 'Add'
         print 'Target Name:', tname
+
+        # TODO: Add find lowest TID and LUNID functions 
         tid = len(self.iets.sessions) + 1
         print 'Tid:', tid
         print 'Active:', ( 'No', 'Yes' )[self.addedit_dialog.active.get_active()]
         print 'Saved:', ( 'No', 'Yes' )[self.addedit_dialog.saved.get_active()]
+
+        print 'Options:'
+        for key, value in self.addedit_dialog.option_store:
+            print '\t %s = %s' % (key, value)
+
+
+#        adm = ietadm.ietadm()
+#        adm.add_target(tid, tname)
+
         print 'Lun Info:'
+        for path, iotype in self.addedit_dialog.lun_store:
+            print '\t', path, iotype
+            #adm.add_lun(tid, lun=idx, path=row[0], type=row[1])
 
-        adm = ietadm.ietadm()
-        adm.add_target(tid, tname)
+        print 'Incoming Users:'
+        for user, password in self.addedit_dialog.user_store:
+            print '\t', user, password
 
-        for idx, row in enumerate(self.addedit_dialog.lun_store):
-            print idx, row[0], row[1]
-            adm.add_lun(tid, lun=idx, path=row[0], type=row[1])
+        print 'Hosts Deny:'
+        for host in self.addedit_dialog.deny_store:
+            print '\t', host[0]
+
+        print 'Hosts Allow:'
+        for host in self.addedit_dialog.allow_store:
+            print '\t', host[0]
 
         self.reload_sessions()
  
