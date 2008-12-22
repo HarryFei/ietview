@@ -135,7 +135,8 @@ class IetView(object):
     def add_target(self, button):
         response = self.addedit_dialog.run_add()
 
-        if response == gtk.RESPONSE_NONE or response == 0: return
+        if response != 1:
+            return
 
         tname = self.addedit_dialog.tname.get_text()
         print 'Operation:', 'Add'
@@ -170,7 +171,7 @@ class IetView(object):
         response = self.addedit_dialog.run_edit(vol=vol,
                 allow=allow, deny=deny, conf=conf)
 
-        if response == gtk.RESPONSE_NONE or response == 0:
+        if response != 1:
             return
 
         old = iet_target.IetTarget(vol=vol, allow=allow, deny=deny) 

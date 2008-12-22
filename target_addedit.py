@@ -115,7 +115,6 @@ class TargetAddEdit(object):
 
         self.option_list.set_search_column(0)
         self.option_list.set_reorderable(False)
-
         # Set up signal handlers
         deny_add = self.wTree.get_widget('deny_add')
         deny_add.connect('clicked', self.add_allowdeny, self.deny_list)
@@ -301,13 +300,59 @@ class TargetAddEdit(object):
             option_password_label.hide()
 
     def add_user(self, button):
-        pass
+        user_addedit = self.wTree.get_widget('user_addedit_dialog')
+        user_name = self.wTree.get_widget('user_name')
+        user_password = self.wTree.get_widget('user_password')
+
+        response = user_addedit.run()
+        user_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            self.user_store.append([user_name.get_text(),
+                                    user_password.get_text()])
 
     def edit_user(self, button):
-        pass
+        user_addedit = self.wTree.get_widget('user_addedit_dialog')
+        user_name = self.wTree.get_widget('user_name')
+        user_password = self.wTree.get_widget('user_password')
+
+        path, col = self.user_list.get_cursor()
+        if path == None:
+            return
+
+        user, passwd = self.user_store[path]
+
+        user_name.set_text(user)
+        user_password.set_text(passwd)
+
+
+        response = user_addedit.run()
+        user_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            self.user_store[path] = [user_name.get_text(),
+                                     user_password.get_text()]
 
     def delete_user(self, button):
-        pass
+        path, col = self.user_list.get_cursor()
+        if path == None:
+            return
+
+        user = self.user_store[path][0]
+
+        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                type = gtk.MESSAGE_QUESTION,
+                                buttons = gtk.BUTTONS_YES_NO,
+                                message_format = 'Delete this user?\n%s' % user)
+
+        response = msg.run()
+
+        if response == gtk.RESPONSE_YES:
+            del self.user_store[path]
+
+        msg.destroy()
 
     def add_allowdeny(self, button, view):
         allowdeny_addedit = self.wTree.get_widget('allowdeny_addedit_dialog')
