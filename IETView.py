@@ -76,12 +76,6 @@ class IetView(object):
                 'user_add_clicked_cb' : self.addedit_dialog.add_user,
                 'user_edit_clicked_cb' : self.addedit_dialog.edit_user,
                 'user_delete_clicked_cb' : self.addedit_dialog.delete_user,
-                'deny_add_clicked_cb' : self.addedit_dialog.add_deny,
-                'deny_edit_clicked_cb' : self.addedit_dialog.edit_deny,
-                'deny_delete_clicked_cb' : self.addedit_dialog.delete_deny,
-                'allow_add_clicked_cb' : self.addedit_dialog.add_allow,
-                'allow_edit_clicked_cb' : self.addedit_dialog.edit_allow,
-                'allow_delete_clicked_cb' : self.addedit_dialog.delete_allow,
                 'option_name_changed_cb' : self.addedit_dialog.option_changed,
                 'allowdeny_type_changed_cb' : self.addedit_dialog.allowdeny_type_changed
               }

@@ -116,6 +116,25 @@ class TargetAddEdit(object):
         self.option_list.set_search_column(0)
         self.option_list.set_reorderable(False)
 
+        # Set up signal handlers
+        deny_add = self.wTree.get_widget('deny_add')
+        deny_add.connect('clicked', self.add_allowdeny, self.deny_list)
+
+        deny_edit = self.wTree.get_widget('deny_edit')
+        deny_edit.connect('clicked', self.edit_allowdeny, self.deny_list)
+
+        deny_delete = self.wTree.get_widget('deny_delete')
+        deny_delete.connect('clicked', self.delete_allowdeny, self.deny_list)
+
+        allow_add = self.wTree.get_widget('allow_add')
+        allow_add.connect('clicked', self.add_allowdeny, self.allow_list)
+
+        allow_edit = self.wTree.get_widget('allow_edit')
+        allow_edit.connect('clicked', self.edit_allowdeny, self.allow_list)
+
+        allow_delete = self.wTree.get_widget('allow_delete')
+        allow_delete.connect('clicked', self.delete_allowdeny, self.allow_list)
+
     def run_add(self):
         self.tname.set_text('')
         self.active.set_active(True)
@@ -290,7 +309,7 @@ class TargetAddEdit(object):
     def delete_user(self, button):
         pass
 
-    def add_deny(self, button):
+    def add_allowdeny(self, button, view):
         allowdeny_addedit = self.wTree.get_widget('allowdeny_addedit_dialog')
         allowdeny_net = self.wTree.get_widget('allowdeny_net')
         allowdeny_mask = self.wTree.get_widget('allowdeny_mask')
@@ -306,28 +325,32 @@ class TargetAddEdit(object):
         allowdeny_addedit.hide()
 
         if response == 1:
+            store = view.get_model()
+
             #TODO: validate input
             if allowdeny_type.get_active() in [1, 3]:
-                self.deny_store.append(['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())])
+                store.append(['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())])
             else:
-                self.deny_store.append([allowdeny_net.get_text()])
+                store.append([allowdeny_net.get_text()])
 
-    def edit_deny(self, button):
+    def edit_allowdeny(self, button, view):
         allowdeny_addedit = self.wTree.get_widget('allowdeny_addedit_dialog')
         allowdeny_net = self.wTree.get_widget('allowdeny_net')
         allowdeny_mask = self.wTree.get_widget('allowdeny_mask')
         allowdeny_type = self.wTree.get_widget('allowdeny_type')
 
-        path, col = self.deny_list.get_cursor()
+        path, col = view.get_cursor()
         if path == None:
             return
 
-        deny = self.deny_store[path][0]
+        store = view.get_model()
 
-        if deny == 'ALL':
+        entry = store[path][0]
+
+        if entry == 'ALL':
             allowdeny_type.set_active(4)
-        elif '/' in deny:
-            net, mask = deny.split('/')
+        elif '/' in entry:
+            net, mask = entry.split('/')
 
             if ':' in net:
                 allowdeny_type.set_active(3)
@@ -337,12 +360,12 @@ class TargetAddEdit(object):
             allowdeny_net.set_text(net)
             allowdeny_mask.set_text(mask)
 
-        elif ':' in deny:
+        elif ':' in entry:
             allowdeny_type.set_active(2)
-            allowdeny_net.set_text(deny)
+            allowdeny_net.set_text(entry)
         else:
             allowdeny_type.set_active(0)
-            allowdeny_net.set_text(deny)
+            allowdeny_net.set_text(entry)
 
         self.allowdeny_type_changed(allowdeny_type)
         response = allowdeny_addedit.run()
@@ -351,35 +374,27 @@ class TargetAddEdit(object):
         if response == 1:
             #TODO: validate input
             if allowdeny_type.get_active() in [1, 3]:
-                self.deny_store[path] = ['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())]
+                store[path] = ['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())]
             else:
-                self.deny_store[path] = [allowdeny_net.get_text()]
+                store[path] = [allowdeny_net.get_text()]
 
-    def delete_deny(self, button):
-        path, col = self.deny_list.get_cursor()
+    def delete_allowdeny(self, button, view):
+        path, col = view.get_cursor()
         if path == None:
             return
 
-        deny = self.deny_store[path][0]
+        store = view.get_model()
 
-        msg = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_YES_NO, message_format='Delete this entry?\n%s'%deny)
+        entry = store[path][0]
+
+        msg = gtk.MessageDialog(flags=gtk.DIALOG_MODAL, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_YES_NO, message_format='Delete this entry?\n%s'%entry)
 
         response = msg.run()
 
         if response == gtk.RESPONSE_YES:
-            del self.deny_store[path]
+            del store[path]
 
         msg.destroy()
-
-
-    def add_allow(self, button):
-        pass
-
-    def edit_allow(self, button):
-        pass
-
-    def delete_allow(self, button):
-        pass
 
     def allowdeny_type_changed(self, combo):
         # 0) IPv4 Host
