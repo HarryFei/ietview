@@ -16,6 +16,26 @@
 import gtk
 
 class TargetAddEdit(object):
+
+    options = [
+        'OutgoingUser',
+        'Alias',
+        'MaxConnections',
+        'ImmediateData',
+        'MaxRecvDataSegmentLength',
+        'MaxXmitDataSegmentLength',
+        'MaxBurstLength',
+        'FirstBurstLength',
+        'DefaultTime2Wait',
+        'DefaultTime2Retain',
+        'MaxOutstandingR2T',
+        'DataPDUInOrder',
+        'DataSequenceInOrder',
+        'ErrorRecoveryLevel',
+        'HeaderDigest',
+        'DataDigest',
+        'Wthreads' ]
+
     def __init__(self, widgets):
         self.wTree = widgets
         self.option_store = gtk.ListStore(str, str)
@@ -95,7 +115,6 @@ class TargetAddEdit(object):
         self.user_list.set_search_column(0)
         self.user_list.set_reorderable(False)
 
-
         # Set up options table
         self.option_list = self.wTree.get_widget('option_list')
         self.option_list.set_model(self.option_store)
@@ -115,6 +134,12 @@ class TargetAddEdit(object):
 
         self.option_list.set_search_column(0)
         self.option_list.set_reorderable(False)
+
+        # Set up options combobox
+        option_name = self.wTree.get_widget('option_name')
+        for option in self.options:
+            option_name.append_text(option)
+
         # Set up signal handlers
         deny_add = self.wTree.get_widget('deny_add')
         deny_add.connect('clicked', self.add_allowdeny, self.deny_list)
@@ -280,10 +305,65 @@ class TargetAddEdit(object):
 
 
     def edit_option(self, button):
-        pass
+        option_addedit = self.wTree.get_widget('option_addedit_dialog')
+        option_name = self.wTree.get_widget('option_name')
+        option_value = self.wTree.get_widget('option_value')
+        option_password = self.wTree.get_widget('option_password')
+        option_password_label = self.wTree.get_widget('option_password_label')
+
+        path, col = self.option_list.get_cursor()
+        if path == None:
+            return
+
+        key, value = self.option_store[path]
+
+        option_name.set_active(self.options.index(key))
+
+        if key == 'OutgoingUser':
+            user, password = value.split('/')
+
+            option_value.set_text(user)
+            option_password.set_text(password)
+            option_password.show()
+            option_password_label.show()
+        else:
+            option_value.set_text(value)
+            option_password.set_text('')
+            option_password.hide()
+            option_password_label.hide()
+
+        response = option_addedit.run()
+        option_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            if option_name.get_active_text() == 'OutgoingUser':
+                self.option_store[path] = [option_name.get_active_text(),
+                                           '%s/%s' % (option_value.get_text(),
+                                                    option_password.get_text())]
+            else:
+                self.option_store[path] = [option_name.get_active_text(),
+                                           option_value.get_text()]
 
     def delete_option(self, button):
-        pass
+        path, col = self.option_list.get_cursor()
+        if path == None:
+            return
+
+        key, value = self.option_store[path]
+
+        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                type = gtk.MESSAGE_QUESTION,
+                                buttons = gtk.BUTTONS_YES_NO,
+                                message_format = 'Delete this option?\n%s = %s'
+                                                 % (key, value))
+
+        response = msg.run()
+
+        if response == gtk.RESPONSE_YES:
+            del self.option_store[path]
+
+        msg.destroy()
 
     def option_changed(self, combo):
         option_password = self.wTree.get_widget('option_password')
