@@ -34,6 +34,20 @@ class IetAllowDeny(object):
 
         f.close
 
+    def add_host(self, target, host):
+        if target not in self.targets:
+            self.targets[target] = []
+
+        self.targets[target].append(host)
+
+    def write(self, filename):
+        f = open(filename, 'w')
+
+        for target, hosts in self.targets.iteritems():
+            f.write('%s %s\n' % (target, ', '.join(hosts)))
+
+        f.close()
+
     def dump(self):
         for key, value in self.targets.iteritems():
             print key, '=', value

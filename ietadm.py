@@ -22,9 +22,9 @@ class IetAdm(object):
 
     def show(self, params, tid, sid=-1):
         if sid >= 0:
-            process = subprocess.Popen('sudo ietadm --op=show --tid=%d --sid=%d' % (tid, sid), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+            process = subprocess.Popen('ietadm --op=show --tid=%d --sid=%d' % (tid, sid), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
         else:
-            process = subprocess.Popen('sudo ietadm --op=show --tid=%d' % tid, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+            process = subprocess.Popen('ietadm --op=show --tid=%d' % tid, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
 
         process.wait()
 
@@ -39,7 +39,7 @@ class IetAdm(object):
         return 0
 
     def add_target(self, tid, name):
-        process = subprocess.Popen('sudo ietadm --op=new --tid=%d --params Name=%s' % (tid, name), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        process = subprocess.Popen('ietadm --op=new --tid=%d --params Name=%s' % (tid, name), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
         process.wait()
 
         if process.returncode != 0:
@@ -48,7 +48,29 @@ class IetAdm(object):
         return 0
 
     def add_lun(self, tid, lun, path, type):
-        process = subprocess.Popen('sudo ietadm --op=new --tid=%d --lun=%d --params=Path=%s,Type=%s' % (tid, lun, path, type), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        process = subprocess.Popen('ietadm --op=new --tid=%d --lun=%d --params=Path=%s,Type=%s' % (tid, lun, path, type), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        process.wait()
+
+        if process.returncode != 0:
+            return process.returncode 
+
+        return 0
+
+    def add_option(self, tid, key, value):
+        if key == 'OutgoingUser':
+            process = subprocess.Popen('ietadm --op=new --tid=%d --user --params=OutgoingUser=%s,Password=%s' % (tid, key, value), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        else:
+            process = subprocess.Popen('ietadm --op=update --tid=%d --params=%s=%s' % (tid, key, value), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+
+        process.wait()
+
+        if process.returncode != 0:
+            return process.returncode 
+
+        return 0
+
+    def add_user(self, tid, uname, passwd):
+        process = subprocess.Popen('ietadm --op=new --tid=%d --user --params=IncomingUser=%s,Password=%s' % (tid, uname, passwd), stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
         process.wait()
 
         if process.returncode != 0:
@@ -57,7 +79,7 @@ class IetAdm(object):
         return 0
 
     def delete_target(self, tid):
-        process = subprocess.Popen('sudo ietadm --op=delete --tid=%d' % tid, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
+        process = subprocess.Popen('ietadm --op=delete --tid=%d' % tid, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, shell=True)
         process.wait()
 
         if process.returncode != 0:

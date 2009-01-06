@@ -149,30 +149,39 @@ class IetView(object):
         print 'Active:', ( 'No', 'Yes' )[self.addedit_dialog.active.get_active()]
         print 'Saved:', ( 'No', 'Yes' )[self.addedit_dialog.saved.get_active()]
 
+        adm = ietadm.IetAdm()
+        adm.add_target(tid, tname)
+
         print 'Options:'
         for key, value in self.addedit_dialog.option_store:
             print '\t %s = %s' % (key, value)
-
-
-#        adm = ietadm.ietadm()
-#        adm.add_target(tid, tname)
+            adm.add_option(tid, key, value)
 
         print 'Lun Info:'
+        idx = 0
         for path, iotype in self.addedit_dialog.lun_store:
             print '\t', path, iotype
-            #adm.add_lun(tid, lun=idx, path=row[0], type=row[1])
+            adm.add_lun(tid, lun=idx, path=path, type=iotype)
+            idx += 1
 
         print 'Incoming Users:'
         for user, password in self.addedit_dialog.user_store:
             print '\t', user, password
+            adm.add_user(tid, user, password)
 
         print 'Hosts Deny:'
         for host in self.addedit_dialog.deny_store:
             print '\t', host[0]
+            self.iet_deny.add_host(tname, host[0])
+
+        self.iet_deny.write('/etc/initiators.deny')
 
         print 'Hosts Allow:'
         for host in self.addedit_dialog.allow_store:
             print '\t', host[0]
+            self.iet_allow.add_host(tname, host[0])
+
+        self.iet_allow.write('/etc/initiators.allow')
 
         self.reload_sessions()
  
