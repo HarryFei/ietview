@@ -38,7 +38,8 @@ class IetAllowDeny(object):
         if target not in self.targets:
             self.targets[target] = []
 
-        self.targets[target].append(host)
+        if host not in self.targets[target]:
+            self.targets[target].append(host)
 
     def write(self, filename):
         f = open(filename, 'w')

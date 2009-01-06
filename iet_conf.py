@@ -39,6 +39,9 @@ class IetConfTarget(object):
     def add_lun(self, number, path, type, **kwargs):
         self.luns[number] = IetConfLun(number, path, type, **kwargs)
 
+    def add_user(self, uname, passwd):
+        self.users[uname] = passwd
+
     def write(self, f, prepend=''):
         f.write('%sTarget %s\n' % (prepend, self.name))
 
