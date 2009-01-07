@@ -153,8 +153,12 @@ class IetView(object):
         print 'Saved:', ( 'No', 'Yes' )[saved]
 
         if saved:
-            self.ietc.add_target(tname, **dict(self.addedit_dialog.option_store))
-            conf_target = self.ietc.targets[tname]
+            self.ietc.add_target(tname, active, **dict(self.addedit_dialog.option_store))
+            # TODO: replace with a get in IetConfFile
+            if active:
+                conf_target = self.ietc.targets[tname]
+            else:
+                conf_target = self.ietc.inactive_targets[tname]
 
             idx = 0
             for path, iotype in self.addedit_dialog.lun_store:

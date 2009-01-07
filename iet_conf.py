@@ -72,8 +72,11 @@ class IetConfFile(object):
         self.options = []
         self.inactive_targets = {}
 
-    def add_target(self, name, **kwargs):
-        self.targets[name] = IetConfTarget(name, **kwargs)
+    def add_target(self, name, active, **kwargs):
+        if active:
+            self.targets[name] = IetConfTarget(name, **kwargs)
+        else:
+            self.inactive_targets[name] = IetConfTarget(name, **kwargs)
 
     def write(self, filename):
         f = file(filename, 'w')
