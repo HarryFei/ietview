@@ -1,3 +1,4 @@
-- Hitting enter in text fields on some dialogs (e.g. deny addedit) should be equ
-ivalent to OK
+- Hitting enter in text fields on some dialogs (e.g. deny addedit) should be equivalent to OK
+
+- Add support for ietadm 0.4.17 (can get user info from ietadm)
 

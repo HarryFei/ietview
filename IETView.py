@@ -153,7 +153,7 @@ class IetView(object):
         print 'Saved:', ( 'No', 'Yes' )[saved]
 
         if saved:
-            self.ietc.add_target(tname, dict(self.addedit_dialog.option_store))
+            self.ietc.add_target(tname, **dict(self.addedit_dialog.option_store))
             conf_target = self.ietc.targets[tname]
 
             idx = 0
@@ -175,7 +175,6 @@ class IetView(object):
             self.iet_allow.write('/etc/initiators.allow')
 
             self.ietc.write('/etc/ietd.conf')
-
 
         if active:
             adm = ietadm.IetAdm()
@@ -212,7 +211,7 @@ class IetView(object):
     
             self.iet_allow.write('/etc/initiators.allow')
     
-            self.reload_sessions()
+        self.reload_sessions()
      
     def edit_target(self, button):
         path, col = self.target_list.get_cursor()

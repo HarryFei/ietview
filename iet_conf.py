@@ -34,7 +34,7 @@ class IetConfTarget(object):
         self.options = []
 
         for kw, val in kwargs.iteritems():
-            options.append((kw, val))
+            self.options.append((kw, val))
         
     def add_lun(self, number, path, type, **kwargs):
         self.luns[number] = IetConfLun(number, path, type, **kwargs)
