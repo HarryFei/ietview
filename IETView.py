@@ -273,6 +273,155 @@ class IetView(object):
 
         self.reload_sessions()
 
+    def show_session_details(self, path):
+        target = self.target_store[path][0]
+        tid = self.iets.sessions[target].tid
+
+        buf = gtk.TextBuffer()
+        buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
+        buf.insert(buf.get_end_iter(), str(tid) + '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
+        buf.insert(buf.get_end_iter(), target + '\n')
+
+        vol = self.ietv.volumes[tid]
+        for lk in sorted(vol.luns.iterkeys()):
+            lun = vol.luns[lk]
+
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                         'LUN: ', 'Bold')
+
+            buf.insert(buf.get_end_iter(), str(lun.lun) + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                         '\tPath: ', 'Bold')
+            
+            buf.insert(buf.get_end_iter(), lun.path + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                         '\tState: ', 'Bold')
+
+            buf.insert(buf.get_end_iter(), str(lun.state) + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                         '\tIO Type: ', 'Bold')
+
+            buf.insert(buf.get_end_iter(), lun.iotype + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                         '\tIO Mode: ', 'Bold')
+
+            buf.insert(buf.get_end_iter(), lun.iomode + '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
+
+        if target in self.iet_deny.targets:
+            buf.insert(buf.get_end_iter(),
+                       str(self.iet_deny.targets[target]) + '\n')
+        else:
+            buf.insert(buf.get_end_iter(), '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
+
+        if target in self.iet_allow.targets:
+            buf.insert(buf.get_end_iter(),
+                       str(self.iet_allow.targets[target]) + '\n')
+        else:
+            buf.insert(buf.get_end_iter(), '\n')
+
+        adm = ietadm.IetAdm()
+        params = {}
+        adm.show(params, tid, sid=0)
+        for key in sorted(params.iterkeys()):
+            buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+            buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
+
+        self.target_details.set_buffer(buf)
+
+    def show_client_details(self, path):
+        target = self.target_store[path[0:2]][0]
+        initiator = self.target_store[path][1]
+        client = self.iets.sessions[target].clients[initiator]
+        buf = gtk.TextBuffer()
+        buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'SID: ', 'Bold')
+        buf.insert(buf.get_end_iter(), str(client.sid) + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Initiator Name: ', 'Bold')
+        buf.insert(buf.get_end_iter(), client.initiator + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'CID: ', 'Bold')
+        buf.insert(buf.get_end_iter(), str(client.cid) + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'IP: ', 'Bold')
+        buf.insert(buf.get_end_iter(), client.ip + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'State: ', 'Bold')
+        buf.insert(buf.get_end_iter(), client.state + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'HD: ', 'Bold')
+        buf.insert(buf.get_end_iter(), client.hd + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'DD: ', 'Bold')
+        buf.insert(buf.get_end_iter(), client.dd + '\n')
+
+        adm = ietadm.IetAdm()
+        params = {}
+        adm.show(params, self.iets.sessions[target].tid, client.sid)
+        keys = params.keys()
+        keys.sort()
+        for key in keys:
+            buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+            buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
+
+
+        self.target_details.set_buffer(buf)
+
+    def show_config_details(self, path):
+        tname = self.target_store[path][0]
+        target = self.ietc.inactive_targets[tname]
+
+        buf = gtk.TextBuffer()
+        buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
+        buf.insert(buf.get_end_iter(), tname + '\n')
+
+        for lk in sorted(target.luns.iterkeys()):
+            lun = target.luns[lk]
+
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                         'LUN: ', 'Bold')
+
+            buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                         '\tPath: ', 'Bold')
+            
+            buf.insert(buf.get_end_iter(), lun.path + '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                         '\tIO Type: ', 'Bold')
+
+            buf.insert(buf.get_end_iter(), lun.type + '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
+
+        if tname in self.iet_deny.targets:
+            buf.insert(buf.get_end_iter(),
+                       str(self.iet_deny.targets[tname]) + '\n')
+        else:
+            buf.insert(buf.get_end_iter(), '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
+
+        if tname in self.iet_allow.targets:
+            buf.insert(buf.get_end_iter(),
+                       str(self.iet_allow.targets[tname]) + '\n')
+        else:
+            buf.insert(buf.get_end_iter(), '\n')
+
+        for key, value in target.options:
+            buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+            if type(value) == str:
+                buf.insert(buf.get_end_iter(), ': %s\n' % value)
+            else:
+                buf.insert(buf.get_end_iter(), ': %s/%s\n' % value)
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Incoming Users:\n', 'Bold')
+        for uname, passwd in target.users.iteritems():
+            buf.insert(buf.get_end_iter(), '\t%s/%s\n' % (uname, passwd))
+
+        self.target_details.set_buffer(buf)
 
     def cursor_changed(self, target_list):
         path, col = target_list.get_cursor()
@@ -281,102 +430,15 @@ class IetView(object):
             return
 
         if len(path) == 2:
-            target = self.target_store[path][0]
-            tid = self.iets.sessions[target].tid
-
-            buf = gtk.TextBuffer()
-            buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
-            buf.insert(buf.get_end_iter(), str(tid) + '\n')
-
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
-            buf.insert(buf.get_end_iter(), target + '\n')
-
-            vol = self.ietv.volumes[tid]
-            for lk in sorted(vol.luns.iterkeys()):
-                lun = vol.luns[lk]
-
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                             'LUN: ', 'Bold')
-
-                buf.insert(buf.get_end_iter(), str(lun.lun) + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(),
-                                             '\tPath: ', 'Bold')
-                
-                buf.insert(buf.get_end_iter(), lun.path + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(),
-                                             '\tState: ', 'Bold')
-
-                buf.insert(buf.get_end_iter(), str(lun.state) + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                             '\tIO Type: ', 'Bold')
-
-                buf.insert(buf.get_end_iter(), lun.iotype + '\n')
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                             '\tIO Mode: ', 'Bold')
-
-                buf.insert(buf.get_end_iter(), lun.iomode + '\n')
-
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
-
-            if target in self.iet_deny.targets:
-                buf.insert(buf.get_end_iter(),
-                           str(self.iet_deny.targets[target]) + '\n')
-            else:
-                buf.insert(buf.get_end_iter(), '\n')
-
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
-
-            if target in self.iet_allow.targets:
-                buf.insert(buf.get_end_iter(),
-                           str(self.iet_allow.targets[target]) + '\n')
-            else:
-                buf.insert(buf.get_end_iter(), '\n')
-
-            adm = ietadm.IetAdm()
-            params = {}
-            adm.show(params, tid, sid=0)
-            for key in sorted(params.iterkeys()):
-                buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
-                buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
-
-            self.target_details.set_buffer(buf)
+            if path[0] == 0:
+                self.show_session_details(path)
+            elif path[0] == 1:
+                self.show_config_details(path)
 
             self.delete_button.set_sensitive(True)
             self.edit_button.set_sensitive(True)
         else:
-            target = self.target_store[path[0:2]][0]
-            initiator = self.target_store[path][1]
-            client = self.iets.sessions[target].clients[initiator]
-            buf = gtk.TextBuffer()
-            buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'SID: ', 'Bold')
-            buf.insert(buf.get_end_iter(), str(client.sid) + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'Initiator Name: ', 'Bold')
-            buf.insert(buf.get_end_iter(), client.initiator + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'CID: ', 'Bold')
-            buf.insert(buf.get_end_iter(), str(client.cid) + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'IP: ', 'Bold')
-            buf.insert(buf.get_end_iter(), client.ip + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'State: ', 'Bold')
-            buf.insert(buf.get_end_iter(), client.state + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'HD: ', 'Bold')
-            buf.insert(buf.get_end_iter(), client.hd + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 'DD: ', 'Bold')
-            buf.insert(buf.get_end_iter(), client.dd + '\n')
-
-            adm = ietadm.IetAdm()
-            params = {}
-            adm.show(params, self.iets.sessions[target].tid, client.sid)
-            keys = params.keys()
-            keys.sort()
-            for key in keys:
-                buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
-                buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
-
-
-            self.target_details.set_buffer(buf)
-
+            self.show_client_details(path)
             self.delete_button.set_sensitive(False)
             self.edit_button.set_sensitive(False)
         

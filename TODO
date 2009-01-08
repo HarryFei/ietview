@@ -2,5 +2,5 @@
 
 - Add support for ietadm 0.4.17 (can get user info from ietadm)
 
-- (bugfix) update cursor_changed to print available info for disabled targets (currently had exception)
+- Fixup Details display.  Maybe have expandable categories or something.
 

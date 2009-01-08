@@ -61,8 +61,7 @@ class IetConfFile(object):
     TARGET_REGEX='Target\s+(?P<target>\S+)'
     CMNT_TARGET_REGEX='\s*#\s*Target\s+(?P<target>\S+)'
     LUN_REGEX='Lun\s+(?P<lun>\d+)\s+Path=(?P<path>[^ \t\n\r\f\v,]+)\s*,\s*Type\s*=\s*(?P<iotype>\w+)'
-    OPTION_REGEX='\s*(?P<key>\S+)\s+(?P<value>\S+)'
-    USERPASS_REGEX='\s*(?P<key>\S+)\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
+    OPTION_REGEX='[^a-zA-Z]*(?P<key>\S+)\s+(?P<value>\S+)'
     IN_USERPASS_REGEX='\s*IncomingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
     OUT_USERPASS_REGEX='\s*OutgoingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
 
@@ -150,7 +149,7 @@ class IetConfFile(object):
                 continue
         
                    
-            m = re.match(self.IN_USERPASS_REGEX, line)
+            m = re.search(self.IN_USERPASS_REGEX, line)
             if m:
                 if current_target:
                     current_target.users[m.group('uname')] = m.group('pass')
@@ -159,7 +158,7 @@ class IetConfFile(object):
 
                 continue
  
-            m = re.match(self.OUT_USERPASS_REGEX, line)
+            m = re.search(self.OUT_USERPASS_REGEX, line)
             if m:
                 if current_target:
                     current_target.options.append(('OutgoingUser', (m.group('uname'), m.group('pass'))))
@@ -169,7 +168,7 @@ class IetConfFile(object):
 
                 continue
 
-            m = re.match(self.OPTION_REGEX, line)
+            m = re.search(self.OPTION_REGEX, line)
             if m:
                 if current_target:
                     current_target.options.append((m.group('key'), m.group('value')))
