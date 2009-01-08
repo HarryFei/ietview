@@ -120,18 +120,41 @@ class IetView(object):
         if path == None: return
         if len(path) != 2: return
 
-        x = path[1]
+        tname = self.target_store[path][0]
 
-        delete_dialog = self.wTree.get_widget('target_delete_dialog')
-        response = delete_dialog.run()
+        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                type = gtk.MESSAGE_QUESTION,
+                                buttons = gtk.BUTTONS_YES_NO,
+                                message_format = 
+                                  'Permanently delete this target?\n%s' % tname)
 
-        if response:
-            adm = ietadm.ietadm()
-            adm.delete_target(self.iets.sessions[x].tid)
+        response = msg.run()
 
-        delete_dialog.hide()
+        if response == gtk.RESPONSE_YES:
+            if path[0] == 0:
+                adm = ietadm.IetAdm()
+                adm.delete_target(self.iets.sessions[tname].tid)
 
-        self.reload_sessions()
+            if tname in self.ietc.targets:
+                del self.ietc.targets[tname]
+                self.ietc.write('/etc/ietd.conf')
+
+            if tname in self.ietc.inactive_targets:
+                del self.ietc.inactive_targets[tname]
+                self.ietc.write('/etc/ietd.conf')
+
+            if tname in self.iet_deny.targets:
+                del self.iet_deny.targets[tname]
+                self.iet_deny.write('/etc/initiators.deny')
+
+            if tname in self.iet_allow.targets:
+                del self.iet_allow.targets[tname]
+                self.iet_allow.write('/etc/initiators.allow')
+
+            self.reload_sessions()
+            self.target_details.set_buffer(gtk.TextBuffer())
+
+        msg.destroy()
 
     def add_target(self, button):
         response = self.addedit_dialog.run_add()
