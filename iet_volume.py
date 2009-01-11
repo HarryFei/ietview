@@ -16,14 +16,7 @@
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
-
-class IetLun(object):
-    def __init__(self, lun, state, iotype, iomode, path):
-        self.lun = lun
-        self.state = state
-        self.iotype = iotype
-        self.iomode = iomode
-        self.path = path
+import iet_target
 
 class IetVolume(object):
     def __init__(self, tid, target):
@@ -32,8 +25,8 @@ class IetVolume(object):
 
         self.luns = {}
 
-    def add_lun(self, l):
-        self.luns[l.lun] = l
+    def add_lun(self, lun):
+        self.luns[lun.number] = lun
 
 class IetVolumes(object):
     TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
@@ -55,9 +48,10 @@ class IetVolumes(object):
             m = re.search(self.LUN_REGEX, line) 
 
             if m:
-                tv.add_lun(IetLun(int(m.group('lun')), int(m.group('state')),
-                                  m.group('iotype'), m.group('iomode'),
-                                  m.group('path')))
+                tv.add_lun(iet_target.IetLun(number=int(m.group('lun')),
+                    state=int(m.group('state')),
+                    iotype=m.group('iotype'), iomode=m.group('iomode'),
+                    path=m.group('path')))
 
         f.close()
 

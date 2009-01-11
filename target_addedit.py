@@ -14,6 +14,7 @@
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk
+import ietadm
 
 class TargetAddEdit(object):
 
@@ -176,29 +177,42 @@ class TargetAddEdit(object):
 
         return response
 
-    def run_edit(self, vol, allow, deny, conf):
-        self.tname.set_text(vol.target)
-        #TODO: Allow editing of inactive targets
+    def run_edit(self, active, session, vol, allow, deny, conf):
 
-        self.active.set_active(True)
-        self.saved.set_active(True)
+        self.active.set_active(active)
+        self.saved.set_active(conf != None)
 
         #TODO: Have to compare config options with runtime options
         # from ietadm, and somehow display that.
         self.option_store.clear()
-        for key, val in conf.options:
-            if type(val) == str:
-                self.option_store.append([key, val])
-            else:
-                self.option_store.append([key, '%s/%s'%val])
-        
+        if active:
+            self.tname.set_text(vol.target)
+            adm = ietadm.IetAdm()
+            params = {}
+            adm.show(params, session.tid, sid=0)
+            for key in sorted(params.iterkeys()):
+                self.option_store.append([key, params[key]])
+
+            luns = vol.luns
+        else:
+            self.tname.set_text(conf.name)
+            for key, val in conf.options.iteritems():
+                if type(val) == str:
+                    self.option_store.append([key, val])
+                else:
+                    self.option_store.append([key, '%s/%s'%val])
+
+            luns = conf.luns
+            
         self.lun_store.clear()
-        for lun in vol.luns.itervalues():
+        for lun in luns.itervalues():
             self.lun_store.append([lun.path, lun.iotype])
 
         self.user_store.clear()
-        for user, passwd in conf.users.iteritems():
-            self.user_store.append([user, passwd])
+
+        if conf != None:
+            for user, passwd in conf.users.iteritems():
+                self.user_store.append([user, passwd])
 
         self.deny_store.clear()
         for host in deny:

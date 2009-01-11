@@ -14,30 +14,20 @@
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
-
-class IetConfLun(object):
-    def __init__(self, number, path, type, **kwargs):
-        self.number = number
-        self.type = type
-        self.path = path
-        
-    def write(self, f, prepend=''):
-        f.write('%s\tLun %d Path=%s,Type=%s\n'
-                % (prepend, self.number, self.path, self.type))
-
+import iet_target
 
 class IetConfTarget(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.luns = {}
         self.users = {}
-        self.options = []
+        self.options = {}
 
         for kw, val in kwargs.iteritems():
-            self.options.append((kw, val))
+            self.options[kw] = val
         
-    def add_lun(self, number, path, type, **kwargs):
-        self.luns[number] = IetConfLun(number, path, type, **kwargs)
+    def add_lun(self, number, path, iotype, **kwargs):
+        self.luns[number] = iet_target.IetLun(number, path, iotype, **kwargs)
 
     def add_user(self, uname, passwd):
         self.users[uname] = passwd
@@ -68,7 +58,7 @@ class IetConfFile(object):
     def __init__(self):
         self.targets = {}
         self.users = {}
-        self.options = []
+        self.options = {}
         self.inactive_targets = {}
 
     def add_target(self, name, active, **kwargs):
@@ -82,7 +72,7 @@ class IetConfFile(object):
 
         f.write('# Written by IETView.py\n')
         f.write('# Global discovery options\n')
-        for key, val in self.options:
+        for key, val in self.options.iteritems():
             if type(val) == str:
                 f.write('%s %s\n' % (key, val))
             else:
@@ -141,8 +131,8 @@ class IetConfFile(object):
             #TODO: Make case insensitive
             m = re.search(self.LUN_REGEX, line)
             if m:
-                new_lun = IetConfLun(int(m.group('lun')), m.group('path'),
-                                     m.group('iotype'))
+                new_lun = iet_target.IetLun(int(m.group('lun')),
+                        m.group('path'), m.group('iotype'))
         
                 current_target.luns[new_lun.number] = new_lun
         
@@ -161,19 +151,19 @@ class IetConfFile(object):
             m = re.search(self.OUT_USERPASS_REGEX, line)
             if m:
                 if current_target:
-                    current_target.options.append(('OutgoingUser', (m.group('uname'), m.group('pass'))))
+                    current_target.options['OutgoingUser'] = (m.group('uname'), m.group('pass'))
                 else:
-                    self.options.append(('OutgoingUser', (m.group('uname'),
-                                                    m.group('pass'))))
+                    self.options['OutgoingUser'] = (m.group('uname'),
+                                                    m.group('pass'))
 
                 continue
 
             m = re.search(self.OPTION_REGEX, line)
             if m:
                 if current_target:
-                    current_target.options.append((m.group('key'), m.group('value')))
+                    current_target.options[m.group('key')] = m.group('value')
                 else:
-                    self.options.append((m.group('key'), m.group('value')))
+                    self.options[m.group('key')] = m.group('value')
 
                 continue
         

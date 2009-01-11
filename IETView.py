@@ -242,26 +242,69 @@ class IetView(object):
      
     def edit_target(self, button):
         path, col = self.target_list.get_cursor()
-        if path == None: return
-        if len(path) != 2: return
+        if path == None:
+            return
+        
+        if len(path) != 2:
+            return
+
+        active = (1,0)[path[0]]
 
         target = self.target_store[path][0]
-        session = self.iets.sessions[target]
-        vol = self.ietv.volumes[session.tid]
-        allow = self.iet_allow.targets[target]
-        deny = self.iet_deny.targets[target]
-        conf = self.ietc.targets[target]
 
-        response = self.addedit_dialog.run_edit(vol=vol,
-                allow=allow, deny=deny, conf=conf)
+        if active:
+            session = self.iets.sessions[target]
+            vol = self.ietv.volumes[session.tid]
+
+            if target in self.ietc.targets:
+                conf = self.ietc.targets[target]
+                saved = True
+            else:
+                conf = None
+                saved = False
+        else:
+            session = None
+            vol = None
+
+            if target in self.ietc.inactive_targets:
+                conf = self.ietc.inactive_targets[target]
+                saved = True
+            else:
+                conf = None
+                saved = False
+ 
+        if target in self.iet_allow.targets:
+            allow = self.iet_allow.targets[target]
+        else:
+            allow = None
+
+        if target in self.iet_deny.targets:
+            deny = self.iet_deny.targets[target]
+        else:
+            deny = None
+
+        print conf
+
+        old = iet_target.IetTarget(tname=target, active=active, saved=saved,
+                session=session, vol=vol, allow=allow, deny=deny, conf=conf) 
+
+        old.dump()
+
+        response = self.addedit_dialog.run_edit(active=active, vol=vol,
+                allow=allow, deny=deny, conf=conf, session=session)
 
         if response != 1:
+            new_target = iet_target.IetTarget(dialog=self.addedit_dialog)
+            new_target.dump()
+            diff = old.diff(right=new_target)
+            for op in diff:
+                print ('add', 'delete', 'update')[op[0]], op[1], op[2]
             return
 
         old = iet_target.IetTarget(vol=vol, allow=allow, deny=deny) 
 
         new_target = iet_target.IetTarget(dialog=self.addedit_dialog)
-        new_target.set_from_dialog()
+        #new_target.set_from_dialog()
 
         diff = old.diff(right=new)
 
@@ -315,7 +358,7 @@ class IetView(object):
             buf.insert_with_tags_by_name(buf.get_end_iter(), 
                                          'LUN: ', 'Bold')
 
-            buf.insert(buf.get_end_iter(), str(lun.lun) + '\n')
+            buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
             buf.insert_with_tags_by_name(buf.get_end_iter(),
                                          '\tPath: ', 'Bold')
             
@@ -415,7 +458,7 @@ class IetView(object):
             buf.insert_with_tags_by_name(buf.get_end_iter(), 
                                          '\tIO Type: ', 'Bold')
 
-            buf.insert(buf.get_end_iter(), lun.type + '\n')
+            buf.insert(buf.get_end_iter(), lun.iotype + '\n')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
 
@@ -433,7 +476,7 @@ class IetView(object):
         else:
             buf.insert(buf.get_end_iter(), '\n')
 
-        for key, value in target.options:
+        for key, value in target.options.iteritems():
             buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
             if type(value) == str:
                 buf.insert(buf.get_end_iter(), ': %s\n' % value)
