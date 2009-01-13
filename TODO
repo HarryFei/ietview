@@ -1,6 +1,9 @@
 - Hitting enter in text fields on some dialogs (e.g. deny addedit) should be equivalent to OK
 
+- Double click of a target should open up edit dialog.
+
 - Add support for ietadm 0.4.17 (can get user info from ietadm)
 
 - Fixup Details display.  Maybe have expandable categories or something.
 
+- Maybe just display/edit the options that are in the configuration file.  If the target is not in the configuration file, you can show all runtime option.  This might be confusing, however.
