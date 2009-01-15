@@ -74,6 +74,7 @@ class IetTarget(object):
 
     def init_active(self, **kwargs):
         self.active = True
+        self.tid = kwargs['session'].tid
         self.saved = kwargs['saved']
         self.name = kwargs['tname']
         self.luns = kwargs['vol'].luns
@@ -86,8 +87,6 @@ class IetTarget(object):
         self.options = {} 
         adm = ietadm.IetAdm()
         adm.show(self.options, kwargs['session'].tid, sid=0)
-        print self.options
-
  
     def init_inactive(self, **kwargs):
         self.active = False
@@ -158,8 +157,7 @@ class IetTarget(object):
             if lun.number not in right.luns:
                 instructions.append((self.DELETE, 'lun', lun))
             elif lun != right.luns[lun.number]:
-                    instructions.append((self.DELETE, 'lun', lun))
-                    instructions.append((self.ADD, 'lun', right.luns[lun.number]))
+                instructions.append((self.UPDATE, 'lun', right.luns[lun.number]))
 
         for lun in right.luns.itervalues():
             if lun.number not in left.luns:
@@ -185,11 +183,21 @@ class IetTarget(object):
             if key not in right.options:
                 instructions.append((self.DELETE, 'option', '%s=%s' % (key, val)))
             elif val != right.options[key]:
-                instructions.append((self.UPDATE, 'options', '%s=%s' % (key, right.options[key])))
+                instructions.append((self.UPDATE, 'option', '%s=%s' % (key, right.options[key])))
 
         for key, val in right.options.iteritems():
             if key not in left.options:
                 instructions.append((self.ADD, 'option', '%s=%s' % (key, val)))
+
+        for uname, passwd in left.users.iteritems():
+            if uname not in right.users:
+                instructions.append((self.DELETE, 'user', '%s/%s' % (uname, passwd)))
+            elif passwd != right.users[uname]:
+                instructions.append((self.UPDATE, 'user', '%s/%s' % (uname, passwd)))
+
+        for uname, passwd in right.users.iteritems():
+            if uname not in left.users:
+                instructions.append((self.ADD, 'user', '%s/%s' % (uname, passwd)))
 
         return instructions
 

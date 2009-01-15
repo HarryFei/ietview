@@ -283,8 +283,6 @@ class IetView(object):
         else:
             deny = None
 
-        print conf
-
         old = iet_target.IetTarget(tname=target, active=active, saved=saved,
                 session=session, vol=vol, allow=allow, deny=deny, conf=conf) 
 
@@ -294,48 +292,26 @@ class IetView(object):
                 allow=allow, deny=deny, conf=conf, session=session)
 
         if response != 1:
-            new_target = iet_target.IetTarget(dialog=self.addedit_dialog)
-            new_target.dump()
-            diff = old.diff(right=new_target)
-            for op in diff:
-                print ('add', 'delete', 'update')[op[0]], op[1], op[2]
             return
 
-        old = iet_target.IetTarget(vol=vol, allow=allow, deny=deny) 
-
         new_target = iet_target.IetTarget(dialog=self.addedit_dialog)
-        #new_target.set_from_dialog()
+        new_target.dump()
 
-        diff = old.diff(right=new)
+        diff = old.diff(right=new_target)
 
-        ietadm.update(old, diff)
+        for op in diff:
+            print ('add', 'delete', 'update')[op[0]], op[1], op[2]
 
-        allow.update(old, diff)
-        deny.update(old, diff)
+        adm = ietadm.IetAdm()
+        adm.update(old, diff)
+        self.iet_allow.update(old, diff, 'allow')
+        self.iet_allow.write('/etc/initiators.allow')
+        self.iet_deny.update(old, diff, 'deny')
+        self.iet_deny.write('/etc/initiators.deny')
 
-        if self.addedit_dialog.saved.get_active():
-            config.update(old, diff)
-
-        tname = self.addedit_dialog.tname.get_text()
-        print 'Operation:', 'Edit'
-        print 'Target Name:', tname
-
-        print 'Tid:', session.tid
-        print 'Active:', ( 'No', 'Yes' )[self.addedit_dialog.active.get_active()]
-        print 'Saved:', ( 'No', 'Yes' )[self.addedit_dialog.saved.get_active()]
-
-#        if tname != target.name:
-#            changes['Name'] = tname
-
-        print 'Lun Info:'
-        for idx, row in enumerate(self.addedit_dialog.lun_store):
-            print idx, row[0], row[1]
-
-#        adm = ietadm.ietadm()
-#        adm.update_target(tid, changes)
-
-#            adm.add_lun(tid, lun=idx, path=row[0], type=row[1])
-#
+        if saved:
+            self.ietc.update(old, diff)
+            self.ietc.write('/etc/ietd.conf')
 
         self.reload_sessions()
 

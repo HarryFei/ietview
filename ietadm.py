@@ -16,6 +16,8 @@
 import re
 import subprocess
 
+import iet_target
+
 class IetAdm(object):
     def __init__(self):
         pass
@@ -139,4 +141,69 @@ class IetAdm(object):
             return process.returncode 
 
         return 0
+
+    def delete_lun(self, tid, lun):
+        cmnd = 'ietadm --op=delete --tid=%d --lun=%d' % (tid, lun)
+
+        process = subprocess.Popen(cmnd, stderr=subprocess.STDOUT,
+                                   stdout=subprocess.PIPE, shell=True)
+
+        process.wait()
+
+        if process.returncode != 0:
+            print 'IETADM error:'
+            for line in process.stdout:
+                print '\t', line,
+            print 'Command was:', cmnd 
+
+            return process.returncode 
+
+        return 0
+
+    def delete_user(self, tid, uname):
+        cmnd = 'ietadm --op=delete --tid=%d --user --params=IncomingUser=%s' % (tid, uname)
+
+        process = subprocess.Popen(cmnd, stderr=subprocess.STDOUT,
+                                   stdout=subprocess.PIPE, shell=True)
+
+        process.wait()
+
+        if process.returncode != 0:
+            print 'IETADM error:'
+            for line in process.stdout:
+                print '\t', line,
+            print 'Command was:', cmnd 
+
+            return process.returncode 
+
+        return 0
+
+    def update(self, target, diff):
+        for op, type, val in diff:
+            if type == 'option':
+                key, val = val.split('=')
+
+                if op == iet_target.IetTarget.ADD:
+                    self.add_option(target.tid, key, val)
+                elif op == iet_target.IetTarget.UPDATE:
+                    self.add_option(target.tid, key, val)
+            elif type == 'lun':
+                if op == iet_target.IetTarget.ADD:
+                    self.add_lun(target.tid, val.number, val.path, val.iotype)
+                elif op == iet_target.IetTarget.DELETE:
+                    self.delete_lun(target.tid, val.number)
+                elif op == iet_target.IetTarget.UPDATE:
+                    self.delete_lun(target.tid, val.number)
+                    self.add_lun(target.tid, val.number, val.path, val.iotype)
+            elif type == 'user':
+                uname, passwd = val.split('/')
+
+                if op == iet_target.IetTarget.ADD:
+                    self.add_user(target.tid, uname, passwd)
+                elif op == iet_target.IetTarget.DELETE:
+                    self.delete_user(target.tid, uname)
+                elif op == iet_target.IetTarget.UPDATE:
+                    self.delete_user(target.tid, uname)
+                    self.add_user(target.tid, uname, passwd)
+
 

@@ -32,6 +32,9 @@ class IetConfTarget(object):
     def add_user(self, uname, passwd):
         self.users[uname] = passwd
 
+    def add_option(self, key, val):
+        self.options[key] = val
+
     def write(self, f, prepend=''):
         f.write('%sTarget %s\n' % (prepend, self.name))
 
@@ -41,7 +44,7 @@ class IetConfTarget(object):
         for user, passwd in self.users.iteritems():
             f.write('%s\tIncomingUser %s %s\n' % (prepend, user, passwd))
 
-        for key, val in self.options:
+        for key, val in self.options.iteritems():
             if type(val) == str:
                 f.write('%s\t%s %s\n' % (prepend, key, val))
             else:
@@ -168,4 +171,36 @@ class IetConfFile(object):
                 continue
         
         f.close()
+
+    def update(self, target, diff):
+        if target.active:
+            local_target = self.targets[target.name]
+        else:
+            local_target = self.inactive_targets[target.name]
+
+        for op, type, val in diff:
+            if type == 'option':
+                key, val = val.split('=')
+
+                if op == iet_target.IetTarget.ADD:
+                    local_target.add_option(key, val)
+                elif op == iet_target.IetTarget.UPDATE:
+                    local_target.options[key] = val
+            elif type == 'lun':
+                if op == iet_target.IetTarget.ADD:
+                    local_target.add_lun(val.number, val.path, val.iotype)
+                elif op == iet_target.IetTarget.DELETE:
+                    del local_target.luns[val.number]
+                elif op == iet_target.IetTarget.UPDATE:
+                    del local_target.luns[val.number]
+                    local_target.add_lun(val.number, val.path, val.iotype)
+            elif type == 'user':
+                uname, passwd = val.split('/')
+
+                if op == iet_target.IetTarget.ADD:
+                    local_target.add_user(uname, passwd)
+                elif op == iet_target.IetTarget.DELETE:
+                    del local_target.users[uname]
+                elif op == iet_target.IetTarget.UPDATE:
+                    local_target.users[uname] = passwd
 

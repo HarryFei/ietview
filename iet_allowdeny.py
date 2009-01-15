@@ -14,6 +14,7 @@
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+import iet_target
 
 class IetAllowDeny(object):
     ALLOWDENY_REGEX='\s*(?P<target>\S+)\s+(?P<hosts>.+)'
@@ -40,6 +41,16 @@ class IetAllowDeny(object):
 
         if host not in self.targets[target]:
             self.targets[target].append(host)
+
+    def update(self, target, diff, my_type):
+        for op, type, val in diff:
+            if type != my_type:
+                continue
+
+            if op == iet_target.IetTarget.ADD:
+                self.targets[target.name].append(val)
+            elif op == iet_target.IetTarget.DELETE:
+                self.targets[target.name].remove(val)
 
     def write(self, filename):
         f = open(filename, 'w')

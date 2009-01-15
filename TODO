@@ -7,3 +7,15 @@
 - Fixup Details display.  Maybe have expandable categories or something.
 
 - Maybe just display/edit the options that are in the configuration file.  If the target is not in the configuration file, you can show all runtime option.  This might be confusing, however.
+
+- Data validation
+
+- After doing an add/edit option and the subsequent reload, re-hightlight the selected target and reload the text details (especially after a reload)
+
+- When loading the add/edit dialog, be sure to set the first tab as active.  It goes back to the last used tab automatically.
+
+- Fix up OutgoingUser...maybe be uname/pass for everything (currently, in iet_config, it's a tuple (uname, pass))
+
+- All options can probably be updates (no adds)
+
+- Lots of options 'stretches out' the add/edit dialog permanently.  Either prevent that from happening, or return to normal size each time.
