@@ -160,9 +160,6 @@ class TargetAddEdit(object):
         allow_delete = self.wTree.get_widget('allow_delete')
         allow_delete.connect('clicked', self.delete_allowdeny, self.allow_list)
 
-        self.init_user_dialog()
-        self.init_option_dialog()
-
     def run_add(self):
         self.tname.set_text('')
         self.active.set_active(True)
@@ -301,18 +298,6 @@ class TargetAddEdit(object):
         lun_addedit = self.wTree.get_widget('lun_addedit_dialog')
         lun_addedit.response(1)
 
-    def init_option_dialog(self):
-        option_addedit = self.wTree.get_widget('option_addedit_dialog')
-        option_value = self.wTree.get_widget('option_value')
-        option_password = self.wTree.get_widget('option_password')
-
-        option_ok = self.wTree.get_widget('option_addedit_ok')
-        option_ok.set_flags(gtk.CAN_DEFAULT)
-        option_ok.grab_default()
-
-        option_value.set_activates_default(True)
-        option_password.set_activates_default(True)
-
     def add_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
         option_name = self.wTree.get_widget('option_name')
@@ -413,18 +398,6 @@ class TargetAddEdit(object):
             option_value_label.set_text('Value:')
             option_password.hide()
             option_password_label.hide()
-
-    def init_user_dialog(self):
-        user_addedit = self.wTree.get_widget('user_addedit_dialog')
-        user_name = self.wTree.get_widget('user_name')
-        user_password = self.wTree.get_widget('user_password')
-
-        user_ok = self.wTree.get_widget('user_addedit_ok')
-        user_ok.set_flags(gtk.CAN_DEFAULT)
-        user_ok.grab_default()
-
-        user_name.set_activates_default(True)
-        user_password.set_activates_default(True)
 
     def add_user(self, button):
         user_addedit = self.wTree.get_widget('user_addedit_dialog')

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jan 15 21:57:18 2009 -->
+<!--Generated with glade3 3.4.5 on Thu Jan 15 22:16:36 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="main_window">
     <property name="visible">True</property>
@@ -695,6 +695,7 @@
                   <widget class="GtkEntry" id="lun_path">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="activates_default">True</property>
                     <signal name="activate" handler="lun_path_activate_cb"/>
                   </widget>
                   <packing>
@@ -784,6 +785,8 @@
               <widget class="GtkButton" id="lun_addedit_ok">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="label" translatable="yes">gtk-ok</property>
                 <property name="use_stock">True</property>
@@ -894,6 +897,7 @@
               <widget class="GtkEntry" id="user_password">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="activates_default">True</property>
               </widget>
               <packing>
                 <property name="left_attach">1</property>
@@ -906,6 +910,7 @@
               <widget class="GtkEntry" id="user_name">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="activates_default">True</property>
               </widget>
               <packing>
                 <property name="left_attach">1</property>
@@ -925,6 +930,8 @@
               <widget class="GtkButton" id="user_addedit_ok">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="label" translatable="yes">gtk-ok</property>
                 <property name="use_stock">True</property>
@@ -997,6 +1004,7 @@ ALL</property>
                   <widget class="GtkEntry" id="allowdeny_net">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="activates_default">True</property>
                   </widget>
                 </child>
                 <child>
@@ -1012,6 +1020,7 @@ ALL</property>
                   <widget class="GtkEntry" id="allowdeny_mask">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="activates_default">True</property>
                   </widget>
                   <packing>
                     <property name="position">2</property>
@@ -1035,6 +1044,8 @@ ALL</property>
               <widget class="GtkButton" id="button1">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="label" translatable="yes">gtk-ok</property>
                 <property name="use_stock">True</property>
@@ -1080,6 +1091,7 @@ ALL</property>
             <child>
               <widget class="GtkEntry" id="option_password">
                 <property name="can_focus">True</property>
+                <property name="activates_default">True</property>
               </widget>
               <packing>
                 <property name="left_attach">1</property>
@@ -1113,6 +1125,7 @@ ALL</property>
               <widget class="GtkEntry" id="option_value">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="activates_default">True</property>
               </widget>
               <packing>
                 <property name="left_attach">1</property>
@@ -1150,6 +1163,8 @@ ALL</property>
               <widget class="GtkButton" id="option_addedit_ok">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="has_default">True</property>
                 <property name="receives_default">True</property>
                 <property name="label" translatable="yes">gtk-ok</property>
                 <property name="use_stock">True</property>
