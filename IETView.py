@@ -63,6 +63,7 @@ class IetView(object):
         dic = { 'session_tree_cursor_changed_cb' : self.cursor_changed,
                 'target_add_clicked_cb' : self.add_target,
                 'target_edit_clicked_cb' : self.edit_target,
+                'session_tree_row_activated_cb' : self.edit_target_activate,
                 'target_delete_clicked_cb' : self.delete_target,
                 'lun_add_clicked_cb' : self.addedit_dialog.add_lun,
                 'lun_edit_clicked_cb' : self.addedit_dialog.edit_lun,
@@ -241,6 +242,9 @@ class IetView(object):
     
         self.reload_sessions()
      
+    def edit_target_activate(self, tree, path, col):
+        self.edit_target(None)
+
     def edit_target(self, button):
         path, col = self.target_list.get_cursor()
         if path == None:

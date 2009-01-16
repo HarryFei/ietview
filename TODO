@@ -1,5 +1,3 @@
-- Double click of a target should open up edit dialog.
-
 - Add support for ietadm 0.4.17 (can get user info from ietadm)
 
 - Fixup Details display.  Maybe have expandable categories or something.
