@@ -71,6 +71,8 @@ class IetView(object):
                 'option_add_clicked_cb' : self.addedit_dialog.add_option,
                 'option_edit_clicked_cb' : self.addedit_dialog.edit_option,
                 'option_delete_clicked_cb' : self.addedit_dialog.delete_option,
+                'option_value_activate_cb' : self.addedit_dialog.option_dialog_ok,
+                'option_password_activate_cb' : self.addedit_dialog.option_dialog_ok,
                 'user_add_clicked_cb' : self.addedit_dialog.add_user,
                 'user_edit_clicked_cb' : self.addedit_dialog.edit_user,
                 'user_delete_clicked_cb' : self.addedit_dialog.delete_user,
