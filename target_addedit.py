@@ -162,6 +162,7 @@ class TargetAddEdit(object):
 
     def run_add(self):
         self.tname.set_text('')
+        self.tname.grab_focus()
         self.active.set_active(True)
         self.saved.set_active(True)
 
@@ -171,6 +172,9 @@ class TargetAddEdit(object):
         self.deny_store.clear()
         self.allow_store.clear()
 
+        notebook = self.wTree.get_widget('target_addedit_notebook')
+        notebook.set_current_page(0)
+
         response = self.dialog.run()
 
         self.dialog.hide()
@@ -178,6 +182,8 @@ class TargetAddEdit(object):
         return response
 
     def run_edit(self, active, session, vol, allow, deny, conf):
+        notebook = self.wTree.get_widget('target_addedit_notebook')
+        notebook.set_current_page(0)
 
         self.active.set_active(active)
         self.saved.set_active(conf != None)

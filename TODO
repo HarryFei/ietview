@@ -1,5 +1,3 @@
-- Hitting enter in text fields on some dialogs (e.g. deny addedit) should be equivalent to OK
-
 - Double click of a target should open up edit dialog.
 
 - Add support for ietadm 0.4.17 (can get user info from ietadm)
@@ -11,8 +9,6 @@
 - Data validation
 
 - After doing an add/edit option and the subsequent reload, re-hightlight the selected target and reload the text details (especially after a reload)
-
-- When loading the add/edit dialog, be sure to set the first tab as active.  It goes back to the last used tab automatically.
 
 - Fix up OutgoingUser...maybe be uname/pass for everything (currently, in iet_config, it's a tuple (uname, pass))
 
