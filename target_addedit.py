@@ -161,6 +161,7 @@ class TargetAddEdit(object):
         allow_delete.connect('clicked', self.delete_allowdeny, self.allow_list)
 
         self.init_user_dialog()
+        self.init_option_dialog()
 
     def run_add(self):
         self.tname.set_text('')
@@ -300,9 +301,17 @@ class TargetAddEdit(object):
         lun_addedit = self.wTree.get_widget('lun_addedit_dialog')
         lun_addedit.response(1)
 
-    def option_dialog_ok(self, entry):
+    def init_option_dialog(self):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
-        option_addedit.response(1)
+        option_value = self.wTree.get_widget('option_value')
+        option_password = self.wTree.get_widget('option_password')
+
+        option_ok = self.wTree.get_widget('option_addedit_ok')
+        option_ok.set_flags(gtk.CAN_DEFAULT)
+        option_ok.grab_default()
+
+        option_value.set_activates_default(True)
+        option_password.set_activates_default(True)
 
     def add_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
@@ -355,6 +364,8 @@ class TargetAddEdit(object):
             option_password.set_text('')
             option_password.hide()
             option_password_label.hide()
+
+        option_value.grab_focus()
 
         response = option_addedit.run()
         option_addedit.hide()

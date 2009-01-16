@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jan 15 21:52:57 2009 -->
+<!--Generated with glade3 3.4.5 on Thu Jan 15 21:57:18 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="main_window">
     <property name="visible">True</property>
@@ -1078,6 +1078,17 @@ ALL</property>
             <property name="n_rows">3</property>
             <property name="n_columns">2</property>
             <child>
+              <widget class="GtkEntry" id="option_password">
+                <property name="can_focus">True</property>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+              </packing>
+            </child>
+            <child>
               <widget class="GtkLabel" id="option_password_label">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Password:</property>
@@ -1099,22 +1110,9 @@ ALL</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkEntry" id="option_password">
-                <property name="can_focus">True</property>
-                <signal name="activate" handler="option_password_activate_cb"/>
-              </widget>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="top_attach">2</property>
-                <property name="bottom_attach">3</property>
-              </packing>
-            </child>
-            <child>
               <widget class="GtkEntry" id="option_value">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <signal name="activate" handler="option_value_activate_cb"/>
               </widget>
               <packing>
                 <property name="left_attach">1</property>
@@ -1149,7 +1147,7 @@ ALL</property>
             <property name="visible">True</property>
             <property name="layout_style">GTK_BUTTONBOX_END</property>
             <child>
-              <widget class="GtkButton" id="button3">
+              <widget class="GtkButton" id="option_addedit_ok">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -1159,7 +1157,7 @@ ALL</property>
               </widget>
             </child>
             <child>
-              <widget class="GtkButton" id="button4">
+              <widget class="GtkButton" id="option_addedit_cancel">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
