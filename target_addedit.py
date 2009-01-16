@@ -294,6 +294,10 @@ class TargetAddEdit(object):
         if response == 1:
             lun_path.set_text(lun_browse.get_filename())
 
+    def lun_dialog_ok(self, entry):
+        lun_addedit = self.wTree.get_widget('lun_addedit_dialog')
+        lun_addedit.response(1)
+
     def option_dialog_ok(self, entry):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
         option_addedit.response(1)

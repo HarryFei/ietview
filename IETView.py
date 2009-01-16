@@ -68,6 +68,7 @@ class IetView(object):
                 'lun_edit_clicked_cb' : self.addedit_dialog.edit_lun,
                 'lun_delete_clicked_cb' : self.addedit_dialog.delete_lun,
                 'lun_browse_clicked_cb' : self.addedit_dialog.path_browse_lun,
+                'lun_path_activate_cb' : self.addedit_dialog.lun_dialog_ok,
                 'option_add_clicked_cb' : self.addedit_dialog.add_option,
                 'option_edit_clicked_cb' : self.addedit_dialog.edit_option,
                 'option_delete_clicked_cb' : self.addedit_dialog.delete_option,
