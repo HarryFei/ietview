@@ -70,6 +70,22 @@ class IetConfFile(object):
         else:
             self.inactive_targets[name] = IetConfTarget(name, **kwargs)
 
+    def activate_target(self, target):
+        local_target = self.inactive_targets[target.name]
+        self.targets[target.name] = local_target
+        del self.inactive_targets[target.name]
+
+    def disable_target(self, target):
+        local_target = self.targets[target.name]
+        self.inactive_targets[target.name] = local_target
+        del self.targets[target.name]
+
+    def delete_target(self, name, active):
+        if active:
+            del self.targets[name]
+        else:
+            del self.inactive_targets[name]
+
     def write(self, filename):
         f = file(filename, 'w')
 
@@ -179,7 +195,17 @@ class IetConfFile(object):
             local_target = self.inactive_targets[target.name]
 
         for op, type, val in diff:
-            if type == 'option':
+            if type == 'name':
+                old_name = local_target.name
+                local_target.name = val
+
+                if target.active:
+                    self.targets[val] = local_target
+                    del self.targets[old_name]
+                else:
+                    self.inactive_targets[val] = local_target
+                    del self.inactive_targets[old_name]
+            elif type == 'option':
                 key, val = val.split('=')
 
                 if op == iet_target.IetTarget.ADD:

@@ -44,14 +44,16 @@ class IetAllowDeny(object):
 
     def update(self, target, diff, my_type):
         for op, type, val in diff:
-            if type != my_type:
-                continue
-
-            if op == iet_target.IetTarget.ADD:
-                self.targets[target.name].append(val)
-            elif op == iet_target.IetTarget.DELETE:
-                self.targets[target.name].remove(val)
-
+            if type == 'name':
+                host_list = self.targets[target.name]
+                self.targets[val] = host_list
+                del self.targets[target.name]
+            elif type == my_type:
+                if op == iet_target.IetTarget.ADD:
+                    self.targets[target.name].append(val)
+                elif op == iet_target.IetTarget.DELETE:
+                    self.targets[target.name].remove(val)
+    
     def write(self, filename):
         f = open(filename, 'w')
 

@@ -6,10 +6,20 @@
 
 - Data validation
 
-- After doing an add/edit option and the subsequent reload, re-hightlight the selected target and reload the text details (especially after a reload)
+- After doing an add/edit option and the subsequent reload, re-hightlight the selected target and reload the text details (especially after a reload).  Select the new target after an add.  Expand category if necessary.
 
 - Fix up OutgoingUser...maybe be uname/pass for everything (currently, in iet_config, it's a tuple (uname, pass))
 
 - All options can probably be updates (no adds)
 
 - Lots of options 'stretches out' the add/edit dialog permanently.  Either prevent that from happening, or return to normal size each time.
+
+- After selecting the type of add/deny, move focus to the first box (not necessary for ALL)
+
+- Propery write IPv6 host addresses for allow/deny
+
+- Fully support Lun configurations (e.g. nullio)
+
+- Put in a warning that if a user has deselected active and saved, that all record of the target will be lost.
+
+- Browse... in lun dialog needs an accelerator.

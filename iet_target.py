@@ -60,8 +60,8 @@ class IetTarget(object):
         self.users = None
         self.options = None
 
-        self.actve = False
-        self.saved = True
+        self.active = False
+        self.saved = False
 
         # Target's can also be initialized from the target add/edit dialog
         if 'dialog' in kwargs:
