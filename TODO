@@ -14,8 +14,6 @@
 
 - Lots of options 'stretches out' the add/edit dialog permanently.  Either prevent that from happening, or return to normal size each time.
 
-- After selecting the type of add/deny, move focus to the first box (not necessary for ALL)
-
 - Propery write IPv6 host addresses for allow/deny
 
 - Fully support Lun configurations (e.g. nullio)

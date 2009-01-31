@@ -568,10 +568,12 @@ class TargetAddEdit(object):
             allowdeny_mask.set_sensitive(False)
         elif combo.get_active() in [0, 2]:
             allowdeny_net.set_sensitive(True)
+            allowdeny_net.grab_focus()
             allowdeny_mask.set_text('')
             allowdeny_mask.set_sensitive(False)
         elif combo.get_active() in [1, 3]:
             allowdeny_net.set_sensitive(True)
+            allowdeny_net.grab_focus()
             allowdeny_mask.set_sensitive(True)
         else:
             allowdeny_net.set_text('')
