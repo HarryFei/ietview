@@ -49,6 +49,7 @@ class IetView(object):
         self.tvcolumn.add_attribute(self.cell, 'text', 0)
         self.target_list.set_search_column(0)
         self.tvcolumn.set_sort_column_id(-1)
+        self.tvcolumn.set_cell_data_func(self.cell, self.bold_cell)
         self.target_list.set_reorderable(False)
 
         self.target_details = self.wTree.get_widget('session_view')
@@ -518,7 +519,17 @@ class IetView(object):
             self.show_client_details(path)
             self.delete_button.set_sensitive(False)
             self.edit_button.set_sensitive(False)
-        
+
+    def bold_cell(self, col, cell, model, iter):
+        """ Bolds Active and Disabled target row text """
+        path = model.get_path(iter)
+        if len(path) == 1:
+            cell.set_property('weight', pango.WEIGHT_BOLD)
+            cell.set_property('scale', pango.SCALE_LARGE)
+        else:
+            cell.set_property('weight', pango.WEIGHT_NORMAL)
+            cell.set_property('scale', pango.SCALE_MEDIUM)
+
 if __name__ == '__main__':
     iet_view = IetView()
     gtk.main()
