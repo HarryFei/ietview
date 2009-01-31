@@ -504,10 +504,14 @@ class IetView(object):
     def cursor_changed(self, target_list):
         path, col = target_list.get_cursor()
         
-        if path == None or len(path) == 1:
+        if path == None:
             return
 
-        if len(path) == 2:
+        if len(path) == 1:
+            self.delete_button.set_sensitive(False)
+            self.edit_button.set_sensitive(False)
+            self.target_details.set_buffer(gtk.TextBuffer())
+        elif len(path) == 2:
             if path[0] == 0:
                 self.show_session_details(path)
             elif path[0] == 1:
