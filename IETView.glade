@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Fri Jan 16 09:33:23 2009 -->
+<!--Generated with glade3 3.4.5 on Fri Jan 30 23:00:05 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="main_window">
     <property name="visible">True</property>
@@ -708,7 +708,8 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="label" translatable="yes">Browse...</property>
+                    <property name="label" translatable="yes">_Browse...</property>
+                    <property name="use_underline">True</property>
                     <property name="response_id">0</property>
                     <signal name="clicked" handler="lun_browse_clicked_cb"/>
                   </widget>
@@ -742,7 +743,8 @@
                       <widget class="GtkRadioButton" id="lun_type_fileio">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="label" translatable="yes">File I/O</property>
+                        <property name="label" translatable="yes">_File I/O</property>
+                        <property name="use_underline">True</property>
                         <property name="response_id">0</property>
                         <property name="active">True</property>
                         <property name="draw_indicator">True</property>
@@ -752,7 +754,8 @@
                       <widget class="GtkRadioButton" id="lun_type_blockio">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="label" translatable="yes">Block I/O</property>
+                        <property name="label" translatable="yes">B_lock I/O</property>
+                        <property name="use_underline">True</property>
                         <property name="response_id">0</property>
                         <property name="active">True</property>
                         <property name="draw_indicator">True</property>
@@ -879,15 +882,20 @@
             <property name="n_rows">2</property>
             <property name="n_columns">2</property>
             <child>
-              <widget class="GtkEntry" id="user_name">
+              <widget class="GtkLabel" id="label7">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="activates_default">True</property>
+                <property name="label" translatable="yes">Password:</property>
               </widget>
               <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
               </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="label4">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Username:</property>
+              </widget>
             </child>
             <child>
               <widget class="GtkEntry" id="user_password">
@@ -903,19 +911,14 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkLabel" id="label4">
+              <widget class="GtkEntry" id="user_name">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Username:</property>
-              </widget>
-            </child>
-            <child>
-              <widget class="GtkLabel" id="label7">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Password:</property>
+                <property name="can_focus">True</property>
+                <property name="activates_default">True</property>
               </widget>
               <packing>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
               </packing>
             </child>
           </widget>
@@ -1090,19 +1093,36 @@ ALL</property>
             <property name="n_rows">3</property>
             <property name="n_columns">2</property>
             <child>
-              <widget class="GtkLabel" id="label11">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Option:</property>
-              </widget>
-            </child>
-            <child>
-              <widget class="GtkLabel" id="option_value_label">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Value:</property>
+              <widget class="GtkEntry" id="option_password">
+                <property name="can_focus">True</property>
+                <property name="activates_default">True</property>
               </widget>
               <packing>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkLabel" id="option_password_label">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Password:</property>
+              </widget>
+              <packing>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkComboBox" id="option_name">
+                <property name="visible">True</property>
+                <property name="items" translatable="yes"></property>
+                <signal name="changed" handler="option_name_changed_cb"/>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
               </packing>
             </child>
             <child>
@@ -1119,37 +1139,20 @@ ALL</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkComboBox" id="option_name">
+              <widget class="GtkLabel" id="option_value_label">
                 <property name="visible">True</property>
-                <property name="items" translatable="yes"></property>
-                <signal name="changed" handler="option_name_changed_cb"/>
+                <property name="label" translatable="yes">Value:</property>
               </widget>
               <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkLabel" id="option_password_label">
+              <widget class="GtkLabel" id="label11">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Password:</property>
+                <property name="label" translatable="yes">Option:</property>
               </widget>
-              <packing>
-                <property name="top_attach">2</property>
-                <property name="bottom_attach">3</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkEntry" id="option_password">
-                <property name="can_focus">True</property>
-                <property name="activates_default">True</property>
-              </widget>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="top_attach">2</property>
-                <property name="bottom_attach">3</property>
-              </packing>
             </child>
           </widget>
           <packing>

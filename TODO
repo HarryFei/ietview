@@ -21,5 +21,3 @@
 - Fully support Lun configurations (e.g. nullio)
 
 - Put in a warning that if a user has deselected active and saved, that all record of the target will be lost.
-
-- Browse... in lun dialog needs an accelerator.
