@@ -1,3 +1,7 @@
+- Refactor out options and user dialogs for use in both target_addedit and global_options.
+
+- Add support for global configuration options
+
 - Add support for ietadm 0.4.17 (can get user info from ietadm)
 
 - Fixup Details display.  Maybe have expandable categories or something.
@@ -19,3 +23,9 @@
 - Fully support Lun configurations (e.g. nullio)
 
 - Put in a warning that if a user has deselected active and saved, that all record of the target will be lost.
+
+- Able to 'kill' or 'delete' client sessions.
+
+- Right click context menu, including a forced reload.
+
+- A reload button and/or respond to F5

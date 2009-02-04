@@ -35,7 +35,9 @@ class TargetAddEdit(object):
         'ErrorRecoveryLevel',
         'HeaderDigest',
         'DataDigest',
-        'Wthreads' ]
+        'Wthreads',
+        'iSNSServer',
+        'iSNSAccessControl']
 
     def __init__(self, widgets):
         self.wTree = widgets

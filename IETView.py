@@ -61,6 +61,49 @@ class IetView(object):
 
         self.addedit_dialog = target_addedit.TargetAddEdit(self.wTree)
 
+        # Set up global options table
+        globalop_list = self.wTree.get_widget('globalop_list')
+        self.globalop_store = gtk.ListStore(str, str)
+        globalop_list.set_model(self.globalop_store)
+        option_col = gtk.TreeViewColumn('Key')
+        option_cell = gtk.CellRendererText()
+        option_col.pack_start(option_cell, True)
+        option_col.add_attribute(option_cell, 'text', 0)
+        option_col.set_sort_column_id(-1)
+        globalop_list.append_column(option_col)
+
+        option_col = gtk.TreeViewColumn('Value')
+        option_cell = gtk.CellRendererText()
+        option_col.pack_start(option_cell, True)
+        option_col.add_attribute(option_cell, 'text', 1)
+        option_col.set_sort_column_id(-1)
+        globalop_list.append_column(option_col)
+
+        globalop_list.set_search_column(0)
+        globalop_list.set_reorderable(False)
+
+        # Set up Global Users list
+        globaluser_list = self.wTree.get_widget('globaluser_list')
+        self.globaluser_store = gtk.ListStore(str, str)
+        globaluser_list.set_model(self.globaluser_store)
+
+        user_col = gtk.TreeViewColumn('Username')
+        user_cell = gtk.CellRendererText()
+        user_col.pack_start(user_cell, True)
+        user_col.add_attribute(user_cell, 'text', 0)
+        user_col.set_sort_column_id(-1)
+        globaluser_list.append_column(user_col)
+
+        user_col = gtk.TreeViewColumn('Password')
+        user_cell = gtk.CellRendererText()
+        user_col.pack_start(user_cell, True)
+        user_col.add_attribute(user_cell, 'text', 1)
+        user_col.set_sort_column_id(-1)
+        globaluser_list.append_column(user_col)
+
+        globaluser_list.set_search_column(0)
+        globaluser_list.set_reorderable(False)
+
         dic = { 'session_tree_cursor_changed_cb' : self.cursor_changed,
                 'target_add_clicked_cb' : self.add_target,
                 'target_edit_clicked_cb' : self.edit_target,
@@ -78,11 +121,26 @@ class IetView(object):
                 'user_edit_clicked_cb' : self.addedit_dialog.edit_user,
                 'user_delete_clicked_cb' : self.addedit_dialog.delete_user,
                 'option_name_changed_cb' : self.addedit_dialog.option_changed,
-                'allowdeny_type_changed_cb' : self.addedit_dialog.allowdeny_type_changed
+                'allowdeny_type_changed_cb' : self.addedit_dialog.allowdeny_type_changed,
+                'add_menu_item_activate_cb' : self.add_target_menu,
+                'edit_menu_item_activate_cb' : self.edit_target_menu,
+                'delete_menu_item_activate_cb' : self.delete_target_menu,
+                'quit_menu_item_activate_cb' : gtk.main_quit,
+                'refresh_menu_item_activate_cb' : self.refresh_menu,
+                'options_menu_item_activate_cb' : self.options_menu,
+                'globalop_add_clicked_cb' : self.add_option,
+                'globalop_edit_clicked_cb' : self.edit_option,
+                'globalop_delete_clicked_cb' : self.delete_option,
+                'globaluser_add_clicked_cb' : self.add_user,
+                'globaluser_edit_clicked_cb' : self.edit_user,
+                'globaluser_delete_clicked_cb' : self.delete_user
               }
 
         self.wTree.signal_autoconnect (dic)
 
+        self.reload_sessions()
+
+    def refresh_menu(self, menuitem):
         self.reload_sessions()
 
     def reload_sessions(self):
@@ -117,6 +175,10 @@ class IetView(object):
         self.iet_deny.parse('/etc/initiators.deny')
 
         self.target_list.expand_row((0), False)
+
+    def delete_target_menu(self, menuitem):
+        """ Delete Menu Item Clicked """
+        self.delete_target(None)
 
     def delete_target(self, button):
         path, col = self.target_list.get_cursor()
@@ -230,7 +292,10 @@ class IetView(object):
     
             self.iet_allow.write('/etc/initiators.allow')
  
-
+    def add_target_menu(self, menuitem):
+        """ Add Menu Item Clicked """
+        self.add_target(None)
+    
     def add_target(self, button):
         response = self.addedit_dialog.run_add()
 
@@ -244,8 +309,13 @@ class IetView(object):
         self.add_target_from_dialog(tid, active, saved, self.addedit_dialog)
    
         self.reload_sessions()
+
+    def edit_target_menu(self, menuitem):
+        """ Edit Menu Item Clicked """
+        self.edit_target(None)
      
     def edit_target_activate(self, tree, path, col):
+        """ Double click triggers an edit """
         self.edit_target(None)
 
     def edit_target(self, button):
@@ -533,6 +603,180 @@ class IetView(object):
         else:
             cell.set_property('weight', pango.WEIGHT_NORMAL)
             cell.set_property('scale', pango.SCALE_MEDIUM)
+
+    def options_menu(self, menuitem):
+        options_menu = self.wTree.get_widget('global_options_dialog')
+        options_list = self.wTree.get_widget('globalop_list')
+        user_list = self.wTree.get_widget('globaluser_list')
+
+        self.globalop_store.clear()
+        self.globaluser_store.clear()
+
+        for key, val in self.ietc.options.iteritems():
+            if type(val) == str:
+                self.globalop_store.append([key, val])
+            else:
+                self.globalop_store.append([key, '%s/%s'%val])
+
+        for user, passwd in self.ietc.users.iteritems():
+            self.globaluser_store.append([user, passwd])
+
+        response = options_menu.run()
+        options_menu.hide()
+
+        if response == 1:
+            pass
+
+    def add_option(self, button):
+        option_addedit = self.wTree.get_widget('option_addedit_dialog')
+        option_name = self.wTree.get_widget('option_name')
+        option_value = self.wTree.get_widget('option_value')
+        option_password = self.wTree.get_widget('option_password')
+        option_password_label = self.wTree.get_widget('option_password_label')
+
+        option_name.set_active(-1)
+        option_value.set_text('')
+        option_password.set_text('')
+        option_password.hide()
+        option_password_label.hide()
+
+        response = option_addedit.run()
+        option_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            if option_name.get_active_text() == 'OutgoingUser':
+                self.globalop_store.append([ option_name.get_active_text(), '%s/%s' % (option_value.get_text(), option_password.get_text()) ])
+            else:
+                self.globalop_store.append([ option_name.get_active_text(), option_value.get_text() ])
+
+
+    def edit_option(self, button):
+        option_addedit = self.wTree.get_widget('option_addedit_dialog')
+        option_name = self.wTree.get_widget('option_name')
+        option_value = self.wTree.get_widget('option_value')
+        option_password = self.wTree.get_widget('option_password')
+        option_password_label = self.wTree.get_widget('option_password_label')
+        options_list = self.wTree.get_widget('globalop_list')
+
+        path, col = options_list.get_cursor()
+        if path == None:
+            return
+
+        key, value = self.globalop_store[path]
+
+        option_name.set_active(self.addedit_dialog.options.index(key))
+
+        if key == 'OutgoingUser':
+            user, password = value.split('/')
+
+            option_value.set_text(user)
+            option_password.set_text(password)
+            option_password.show()
+            option_password_label.show()
+        else:
+            option_value.set_text(value)
+            option_password.set_text('')
+            option_password.hide()
+            option_password_label.hide()
+
+        option_value.grab_focus()
+
+        response = option_addedit.run()
+        option_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            if option_name.get_active_text() == 'OutgoingUser':
+                self.globalop_store[path] = [option_name.get_active_text(),
+                                           '%s/%s' % (option_value.get_text(),
+                                                    option_password.get_text())]
+            else:
+                self.globalop_store[path] = [option_name.get_active_text(),
+                                             option_value.get_text()]
+
+    def delete_option(self, button):
+        options_list = self.wTree.get_widget('globalop_list')
+        path, col = options_list.get_cursor()
+        if path == None:
+            return
+
+        key, value = self.globalop_store[path]
+
+        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                type = gtk.MESSAGE_QUESTION,
+                                buttons = gtk.BUTTONS_YES_NO,
+                                message_format = 'Delete this option?\n%s = %s'
+                                                 % (key, value))
+
+        response = msg.run()
+
+        if response == gtk.RESPONSE_YES:
+            del self.globalop_store[path]
+
+        msg.destroy()
+
+    def add_user(self, button):
+        user_addedit = self.wTree.get_widget('user_addedit_dialog')
+        user_name = self.wTree.get_widget('user_name')
+        user_password = self.wTree.get_widget('user_password')
+
+        user_name.set_text('')
+        user_name.grab_focus()
+        user_password.set_text('')
+
+        response = user_addedit.run()
+        user_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            self.globaluser_store.append([user_name.get_text(),
+                                    user_password.get_text()])
+
+    def edit_user(self, button):
+        user_addedit = self.wTree.get_widget('user_addedit_dialog')
+        user_name = self.wTree.get_widget('user_name')
+        user_password = self.wTree.get_widget('user_password')
+        user_list = self.wTree.get_widget('globaluser_list')
+
+        path, col = user_list.get_cursor()
+        if path == None:
+            return
+
+        user, passwd = self.globaluser_store[path]
+
+        user_name.set_text(user)
+        user_name.grab_focus()
+        user_password.set_text(passwd)
+
+
+        response = user_addedit.run()
+        user_addedit.hide()
+
+        if response == 1:
+            #TODO: validate input
+            self.globaluser_store[path] = [user_name.get_text(),
+                                     user_password.get_text()]
+
+    def delete_user(self, button):
+        user_list = self.wTree.get_widget('globaluser_list')
+        path, col = user_list.get_cursor()
+        if path == None:
+            return
+
+        user = self.globaluser_store[path][0]
+
+        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                type = gtk.MESSAGE_QUESTION,
+                                buttons = gtk.BUTTONS_YES_NO,
+                                message_format = 'Delete this user?\n%s' % user)
+
+        response = msg.run()
+
+        if response == gtk.RESPONSE_YES:
+            del self.globaluser_store[path]
+
+        msg.destroy()
 
 if __name__ == '__main__':
     iet_view = IetView()
