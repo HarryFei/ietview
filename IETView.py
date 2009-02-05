@@ -625,7 +625,19 @@ class IetView(object):
         options_menu.hide()
 
         if response == 1:
-            pass
+            self.ietc.options.clear()
+            for key, val in self.globalop_store:
+                if key == 'OutgoingUser':
+                    uname, passwd = val.split('/')
+                    self.ietc.options[key] = (uname, passwd)
+                else:
+                    self.ietc.options[key] = val
+
+            self.ietc.users.clear()
+            for uname, passwd in self.globaluser_store:
+                self.ietc.users[uname] = passwd
+
+            self.ietc.write('/etc/ietd.conf')
 
     def add_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
