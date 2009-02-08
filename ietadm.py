@@ -86,7 +86,11 @@ class IetAdm(object):
 
     def add_option(self, tid, key, value):
         if key == 'OutgoingUser':
-            cmnd = 'ietadm --op=new --tid=%d --user --params=OutgoingUser=%s,Password=%s' % (tid, key, value)
+            uname, passwd = value.split('/')
+            if tid > 0:
+                cmnd = 'ietadm --op=new --tid=%d --user --params=OutgoingUser=%s,Password=%s' % (tid, uname, passwd)
+            else:
+                cmnd = 'ietadm --op=new --user --params=OutgoingUser=%s,Password=%s' % (uname, passwd)
         else:
             cmnd = 'ietadm --op=update --tid=%d --params=%s=%s' \
                     % (tid, key, value)
@@ -107,7 +111,11 @@ class IetAdm(object):
         return 0
 
     def add_user(self, tid, uname, passwd):
-        cmnd = 'ietadm --op=new --tid=%d --user --params=IncomingUser=%s,Password=%s' % (tid, uname, passwd)
+        if tid > 0:
+            cmnd = 'ietadm --op=new --tid=%d --user --params=IncomingUser=%s,Password=%s' % (tid, uname, passwd)
+        else:
+            cmnd = 'ietadm --op=new --user --params=IncomingUser=%s,Password=%s' % (uname, passwd)
+
 
         process = subprocess.Popen(cmnd, stderr=subprocess.STDOUT,
                                    stdout=subprocess.PIPE, shell=True)
@@ -161,7 +169,38 @@ class IetAdm(object):
         return 0
 
     def delete_user(self, tid, uname):
-        cmnd = 'ietadm --op=delete --tid=%d --user --params=IncomingUser=%s' % (tid, uname)
+        if tid > 0:
+            cmnd = 'ietadm --op=delete --tid=%d --user --params=IncomingUser=%s' % (tid, uname)
+        else:
+            cmnd = 'ietadm --op=delete --user --params=IncomingUser=%s' % uname
+
+
+        process = subprocess.Popen(cmnd, stderr=subprocess.STDOUT,
+                                   stdout=subprocess.PIPE, shell=True)
+
+        process.wait()
+
+        if process.returncode != 0:
+            print 'IETADM error:'
+            for line in process.stdout:
+                print '\t', line,
+            print 'Command was:', cmnd 
+
+            return process.returncode 
+
+        return 0
+
+    def delete_option(self, tid, key, value):
+        if key == 'OutgoingUser':
+            uname, passwd = value.split('/')
+
+            if tid > 0:
+                cmnd = 'ietadm --op=delete --tid=%d --user --params=OutgoingUser=%s' % (tid, uname)
+            else:
+                cmnd = 'ietadm --op=delete --user --params=OutgoingUser=%s' %  uname
+        else:
+            # TODO: throw expception
+            pass
 
         process = subprocess.Popen(cmnd, stderr=subprocess.STDOUT,
                                    stdout=subprocess.PIPE, shell=True)
@@ -187,6 +226,8 @@ class IetAdm(object):
                     self.add_option(target.tid, key, val)
                 elif op == iet_target.IetTarget.UPDATE:
                     self.add_option(target.tid, key, val)
+                elif op == iet_target.IetTarget.DELETE:
+                    self.delete_option(target.tid, key, val)
             elif type == 'lun':
                 if op == iet_target.IetTarget.ADD:
                     self.add_lun(target.tid, val.number, val.path, val.iotype)

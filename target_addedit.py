@@ -17,7 +17,6 @@ import gtk
 import ietadm
 
 class TargetAddEdit(object):
-
     options = [
         'OutgoingUser',
         'Alias',
@@ -35,9 +34,7 @@ class TargetAddEdit(object):
         'ErrorRecoveryLevel',
         'HeaderDigest',
         'DataDigest',
-        'Wthreads',
-        'iSNSServer',
-        'iSNSAccessControl']
+        'Wthreads' ]
 
     def __init__(self, widgets):
         self.wTree = widgets
@@ -46,6 +43,7 @@ class TargetAddEdit(object):
         self.user_store = gtk.ListStore(str, str)
         self.deny_store = gtk.ListStore(str)
         self.allow_store = gtk.ListStore(str)
+        self.option_names = gtk.ListStore(str)
 
         self.tname = self.wTree.get_widget('addedit_tname')
         self.active = self.wTree.get_widget('addedit_active')
@@ -141,7 +139,10 @@ class TargetAddEdit(object):
         # Set up options combobox
         option_name = self.wTree.get_widget('option_name')
         for option in self.options:
-            option_name.append_text(option)
+            #option_name.append_text(option)
+            self.option_names.append([option])
+
+        option_name.set_model(self.option_names)
 
         # Set up signal handlers
         deny_add = self.wTree.get_widget('deny_add')
@@ -205,10 +206,7 @@ class TargetAddEdit(object):
         else:
             self.tname.set_text(conf.name)
             for key, val in conf.options.iteritems():
-                if type(val) == str:
-                    self.option_store.append([key, val])
-                else:
-                    self.option_store.append([key, '%s/%s'%val])
+                self.option_store.append([key, val])
 
             luns = conf.luns
             

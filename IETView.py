@@ -82,6 +82,10 @@ class IetView(object):
         globalop_list.set_search_column(0)
         globalop_list.set_reorderable(False)
 
+        self.globalop_names = gtk.ListStore(str)
+        for name in ['OutgoingUser', 'iSNSServer', 'iSNSAccessControl']:
+            self.globalop_names.append([name])
+
         # Set up Global Users list
         globaluser_list = self.wTree.get_widget('globaluser_list')
         self.globaluser_store = gtk.ListStore(str, str)
@@ -560,10 +564,7 @@ class IetView(object):
 
         for key, value in target.options.iteritems():
             buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
-            if type(value) == str:
-                buf.insert(buf.get_end_iter(), ': %s\n' % value)
-            else:
-                buf.insert(buf.get_end_iter(), ': %s/%s\n' % value)
+            buf.insert(buf.get_end_iter(), ': %s\n' % value)
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Incoming Users:\n', 'Bold')
         for uname, passwd in target.users.iteritems():
@@ -595,7 +596,7 @@ class IetView(object):
             self.edit_button.set_sensitive(False)
 
     def bold_cell(self, col, cell, model, iter):
-        """ Bolds Active and Disabled target row text """
+        ''' Bolds Active and Disabled target row text '''
         path = model.get_path(iter)
         if len(path) == 1:
             cell.set_property('weight', pango.WEIGHT_BOLD)
@@ -613,10 +614,7 @@ class IetView(object):
         self.globaluser_store.clear()
 
         for key, val in self.ietc.options.iteritems():
-            if type(val) == str:
-                self.globalop_store.append([key, val])
-            else:
-                self.globalop_store.append([key, '%s/%s'%val])
+            self.globalop_store.append([key, val])
 
         for user, passwd in self.ietc.users.iteritems():
             self.globaluser_store.append([user, passwd])
@@ -625,17 +623,48 @@ class IetView(object):
         options_menu.hide()
 
         if response == 1:
-            self.ietc.options.clear()
+            adm = ietadm.IetAdm()
+            newopts = {}
             for key, val in self.globalop_store:
+                out = 0
                 if key == 'OutgoingUser':
-                    uname, passwd = val.split('/')
-                    self.ietc.options[key] = (uname, passwd)
-                else:
-                    self.ietc.options[key] = val
+                    out = 1
 
-            self.ietc.users.clear()
+                newopts[key] = val
+
+                if key not in self.ietc.options:
+                    self.ietc.options[key] = val
+                    if out:
+                        adm.add_option(-1, key, val)
+                elif val != self.ietc.options[key]:
+                    self.ietc.options[key] = val
+                    if out:
+                        adm.delete_option(-1, key, val)
+                        adm.add_option(-1, key, val)
+
+            for key, val in self.ietc.options.iteritems():
+                if key not in newopts:
+                    if out:
+                        adm.delete_option(-1, key, val)
+
+                    del self.ietc.options[key]
+
+            newusers = {}
             for uname, passwd in self.globaluser_store:
-                self.ietc.users[uname] = passwd
+                newusers[uname] = passwd
+
+                if uname not in self.ietc.users:
+                    self.ietc.users[uname] = passwd
+                    adm.add_user(-1, uname, passwd)
+                elif passwd != self.ietc.users[uname]:
+                    self.ietc.users[uname] = passwd
+                    adm.delete_user(-1, uname)
+                    adm.add_user(-1, uname, passwd)
+
+            for uname, passwd in self.ietc.users.iteritems():
+                if uname not in newusers:
+                    adm.delete_user(-1, uname)
+                    del self.ietc.users[uname]
 
             self.ietc.write('/etc/ietd.conf')
 
@@ -645,6 +674,9 @@ class IetView(object):
         option_value = self.wTree.get_widget('option_value')
         option_password = self.wTree.get_widget('option_password')
         option_password_label = self.wTree.get_widget('option_password_label')
+
+        old_model = option_name.get_model()
+        option_name.set_model(self.globalop_names)
 
         option_name.set_active(-1)
         option_value.set_text('')
@@ -662,6 +694,8 @@ class IetView(object):
             else:
                 self.globalop_store.append([ option_name.get_active_text(), option_value.get_text() ])
 
+        option_name.set_model(old_model)
+
 
     def edit_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
@@ -676,6 +710,9 @@ class IetView(object):
             return
 
         key, value = self.globalop_store[path]
+
+        old_model = option_name.get_model()
+        option_name.set_model(self.globalop_names)
 
         option_name.set_active(self.addedit_dialog.options.index(key))
 
@@ -706,6 +743,8 @@ class IetView(object):
             else:
                 self.globalop_store[path] = [option_name.get_active_text(),
                                              option_value.get_text()]
+
+        option_name.set_model(old_model)
 
     def delete_option(self, button):
         options_list = self.wTree.get_widget('globalop_list')

@@ -45,10 +45,11 @@ class IetConfTarget(object):
             f.write('%s\tIncomingUser %s %s\n' % (prepend, user, passwd))
 
         for key, val in self.options.iteritems():
-            if type(val) == str:
+            if key != 'OutgoingUser':
                 f.write('%s\t%s %s\n' % (prepend, key, val))
             else:
-                f.write('%s\t%s %s\n' % (prepend, key, ' '.join(val)))
+                f.write('%s\t%s %s\n' % 
+                        (prepend, key, ' '.join(val.split('/'))))
 
 class IetConfFile(object):
     TARGET_REGEX='Target\s+(?P<target>\S+)'
@@ -92,10 +93,10 @@ class IetConfFile(object):
         f.write('# Written by IETView.py\n')
         f.write('# Global discovery options\n')
         for key, val in self.options.iteritems():
-            if type(val) == str:
+            if key != 'OutgoingUser':
                 f.write('%s %s\n' % (key, val))
             else:
-                f.write('%s %s\n' % (key, ' '.join(val)))
+                f.write('%s %s\n' % (key, ' '.join(val.split('/'))))
 
         f.write('\n')
 
@@ -170,10 +171,11 @@ class IetConfFile(object):
             m = re.search(self.OUT_USERPASS_REGEX, line)
             if m:
                 if current_target:
-                    current_target.options['OutgoingUser'] = (m.group('uname'), m.group('pass'))
+                    current_target.options['OutgoingUser'] = '%s/%s' % \
+                            (m.group('uname'), m.group('pass'))
                 else:
-                    self.options['OutgoingUser'] = (m.group('uname'),
-                                                    m.group('pass'))
+                    self.options['OutgoingUser'] = '%s/%s' % \
+                            (m.group('uname'), m.group('pass'))
 
                 continue
 

@@ -225,9 +225,4 @@ class IetTarget(object):
 
         print 'Options:'
         for key, val in self.options.iteritems():
-            if type(val) == str:
-                print '\t', key, val
-            else:
-                print '\t', key, '%s/%s'%(val[0], val[1])
-
-
+            print '\t', key, val
