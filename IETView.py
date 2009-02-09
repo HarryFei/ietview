@@ -137,7 +137,8 @@ class IetView(object):
                 'globalop_delete_clicked_cb' : self.delete_option,
                 'globaluser_add_clicked_cb' : self.add_user,
                 'globaluser_edit_clicked_cb' : self.edit_user,
-                'globaluser_delete_clicked_cb' : self.delete_user
+                'globaluser_delete_clicked_cb' : self.delete_user,
+                'about_menu_item_activate_cb' : self.about
               }
 
         self.wTree.signal_autoconnect (dic)
@@ -828,6 +829,11 @@ class IetView(object):
             del self.globaluser_store[path]
 
         msg.destroy()
+
+    def about(self, menuitem):
+        about = self.wTree.get_widget('about_dialog')
+        about.run()
+        about.hide()
 
 if __name__ == '__main__':
     iet_view = IetView()
