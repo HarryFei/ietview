@@ -359,12 +359,12 @@ class IetView(object):
         if target in self.iet_allow.targets:
             allow = self.iet_allow.targets[target]
         else:
-            allow = None
+            allow = []
 
         if target in self.iet_deny.targets:
             deny = self.iet_deny.targets[target]
         else:
-            deny = None
+            deny = []
 
         old = iet_target.IetTarget(tname=target, active=active, saved=saved,
                 session=session, vol=vol, allow=allow, deny=deny, conf=conf) 
