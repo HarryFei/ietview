@@ -369,7 +369,7 @@ class IetView(object):
         old = iet_target.IetTarget(tname=target, active=active, saved=saved,
                 session=session, vol=vol, allow=allow, deny=deny, conf=conf) 
 
-        old.dump()
+        #old.dump()
 
         response = self.addedit_dialog.run_edit(active=active, vol=vol,
                 allow=allow, deny=deny, conf=conf, session=session)
@@ -378,7 +378,7 @@ class IetView(object):
             return
 
         new_target = iet_target.IetTarget(dialog=self.addedit_dialog)
-        new_target.dump()
+        #new_target.dump()
 
         diff = old.diff(right=new_target)
 
