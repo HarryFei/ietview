@@ -82,7 +82,10 @@ class IetTarget(object):
         self.deny = kwargs['deny']
 
         # TODO: Can be reteived via ietadm with version 0.4.17
-        self.users = kwargs['conf'].users
+        if 'conf' in kwargs and kwargs['conf'] != None:
+            self.users = kwargs['conf'].users
+        else:
+            self.users = {}
 
         self.options = {} 
         adm = ietadm.IetAdm()
