@@ -53,6 +53,9 @@ class IetView(object):
         self.target_list.set_reorderable(False)
 
         self.target_details = self.wTree.get_widget('session_view')
+        margin = 20
+        self.target_details.set_left_margin(margin)
+        self.target_details.set_right_margin(margin)
         self.add_button = self.wTree.get_widget('target_add')
         self.edit_button = self.wTree.get_widget('target_edit')
         self.edit_button.set_sensitive(False)
@@ -431,7 +434,13 @@ class IetView(object):
         tid = self.iets.sessions[target].tid
 
         buf = gtk.TextBuffer()
+        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
+        buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Details for Target\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % target, 'Heading2')
+
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
         buf.insert(buf.get_end_iter(), str(tid) + '\n')
 
@@ -494,6 +503,13 @@ class IetView(object):
         client = self.iets.sessions[target].clients[initiator]
         buf = gtk.TextBuffer()
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
+        buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
+        buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Details for Client\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % client.initiator, 'Heading2')
+
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'SID: ', 'Bold')
         buf.insert(buf.get_end_iter(), str(client.sid) + '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Initiator Name: ', 'Bold')
@@ -526,7 +542,12 @@ class IetView(object):
         target = self.ietc.inactive_targets[tname]
 
         buf = gtk.TextBuffer()
+        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
+        buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Details for Target\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % tname, 'Heading2')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
         buf.insert(buf.get_end_iter(), tname + '\n')
