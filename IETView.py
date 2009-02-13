@@ -228,14 +228,27 @@ class IetView(object):
             self.target_details.set_buffer(gtk.TextBuffer())
 
         msg.destroy()
+
+    def get_next_tid(self):
+        tids = []
+
+        for session in self.iets.sessions.itervalues():
+            tids.append(session.tid)
+
+        tids.sort()
+
+        next_tid = 1
+        for tid in tids:
+            if tid != next_tid:
+                return next_tid
+
+            next_tid += 1
+
+        return next_tid
+ 
         
     def add_target_from_dialog(self, tid, active, saved, dialog):
         tname = dialog.tname.get_text()
-        print 'Operation:', 'Add'
-        print 'Target Name:', tname
-        print 'Tid:', tid
-        print 'Active:', ( 'No', 'Yes' )[active]
-        print 'Saved:', ( 'No', 'Yes' )[saved]
 
         if saved:
             self.ietc.add_target(tname, active, **dict(dialog.option_store))
@@ -269,33 +282,23 @@ class IetView(object):
             adm = ietadm.IetAdm()
             adm.add_target(tid, tname)
     
-            print 'Options:'
             for key, value in dialog.option_store:
-                print '\t %s = %s' % (key, value)
                 adm.add_option(tid, key, value)
     
-            print 'Lun Info:'
             idx = 0
             for path, iotype in dialog.lun_store:
-                print '\t', path, iotype
                 adm.add_lun(tid, lun=idx, path=path, type=iotype)
                 idx += 1
     
-            print 'Incoming Users:'
             for user, password in dialog.user_store:
-                print '\t', user, password
                 adm.add_user(tid, user, password)
     
-            print 'Hosts Deny:'
             for host in dialog.deny_store:
-                print '\t', host[0]
                 self.iet_deny.add_host(tname, host[0])
     
             self.iet_deny.write('/etc/initiators.deny')
     
-            print 'Hosts Allow:'
             for host in dialog.allow_store:
-                print '\t', host[0]
                 self.iet_allow.add_host(tname, host[0])
     
             self.iet_allow.write('/etc/initiators.allow')
@@ -303,7 +306,7 @@ class IetView(object):
     def add_target_menu(self, menuitem):
         """ Add Menu Item Clicked """
         self.add_target(None)
-    
+   
     def add_target(self, button):
         response = self.addedit_dialog.run_add()
 
@@ -312,8 +315,7 @@ class IetView(object):
 
         active = self.addedit_dialog.active.get_active()
         saved = self.addedit_dialog.saved.get_active()
-        # TODO: Add find lowest TID and LUNID functions 
-        tid = len(self.iets.sessions) + 1
+        tid = self.get_next_tid()
         self.add_target_from_dialog(tid, active, saved, self.addedit_dialog)
    
         self.reload_sessions()
@@ -372,8 +374,6 @@ class IetView(object):
         old = iet_target.IetTarget(tname=target, active=active, saved=saved,
                 session=session, vol=vol, allow=allow, deny=deny, conf=conf) 
 
-        #old.dump()
-
         response = self.addedit_dialog.run_edit(active=active, vol=vol,
                 allow=allow, deny=deny, conf=conf, session=session)
 
@@ -381,12 +381,8 @@ class IetView(object):
             return
 
         new_target = iet_target.IetTarget(dialog=self.addedit_dialog)
-        #new_target.dump()
 
         diff = old.diff(right=new_target)
-
-        for op in diff:
-            print ('add', 'delete', 'update')[op[0]], op[1], op[2]
 
         #TODO: target name change (or disable this field on edit active)
 
@@ -418,8 +414,7 @@ class IetView(object):
 
         for op, type, val in diff:
             if type == 'active' and val == True:
-                # TODO: Add find lowest TID and LUNID functions 
-                tid = len(self.iets.sessions) + 1
+                tid = self.get_next_tid()
                 self.add_target_from_dialog(tid, True, False, self.addedit_dialog)
                 self.ietc.activate_target(old)
                 self.ietc.write('/etc/ietd.conf')

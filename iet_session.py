@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 # This file is part of IETView
 #
 # IETView is free software: you can redistribute it and/or modify
