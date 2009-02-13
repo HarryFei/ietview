@@ -196,6 +196,7 @@ class TargetAddEdit(object):
         self.option_store.clear()
         if active:
             self.tname.set_text(vol.target)
+            self.tname.set_sensitive(False)
             adm = ietadm.IetAdm()
             params = {}
             adm.show(params, session.tid, sid=0)
@@ -232,6 +233,7 @@ class TargetAddEdit(object):
 
         self.dialog.hide()
 
+        self.tname.set_sensitive(True)
         return response
 
     def add_lun(self, button):
