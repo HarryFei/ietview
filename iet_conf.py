@@ -59,6 +59,25 @@ class IetConfFile(object):
     IN_USERPASS_REGEX='\s*IncomingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
     OUT_USERPASS_REGEX='\s*OutgoingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
 
+    possible_options = [
+        'OutgoingUser',
+        'Alias',
+        'MaxConnections',
+        'ImmediateData',
+        'MaxRecvDataSegmentLength',
+        'MaxXmitDataSegmentLength',
+        'MaxBurstLength',
+        'FirstBurstLength',
+        'DefaultTime2Wait',
+        'DefaultTime2Retain',
+        'MaxOutstandingR2T',
+        'DataPDUInOrder',
+        'DataSequenceInOrder',
+        'ErrorRecoveryLevel',
+        'HeaderDigest',
+        'DataDigest',
+        'Wthreads' ]
+
     def __init__(self):
         self.targets = {}
         self.users = {}
@@ -181,6 +200,9 @@ class IetConfFile(object):
 
             m = re.search(self.OPTION_REGEX, line)
             if m:
+                if m.group('key') not in self.possible_options:
+                    continue
+
                 if current_target:
                     current_target.options[m.group('key')] = m.group('value')
                 else:
