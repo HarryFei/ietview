@@ -486,6 +486,16 @@ class TargetAddEdit(object):
             store = view.get_model()
 
             #TODO: validate input
+            if allowdeny_type.get_active() in [2, 3]:
+                host = allowdeny_net.get_text()
+                if host[0] != '[':
+                    host = '[' + host
+
+                if host[-1] != ']':
+                    host = host + ']'
+
+                allowdeny_net.set_text(host)
+
             if allowdeny_type.get_active() in [1, 3]:
                 store.append(['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())])
             else:
@@ -530,6 +540,17 @@ class TargetAddEdit(object):
         allowdeny_addedit.hide()
 
         if response == 1:
+            if allowdeny_type.get_active() in [2,3]:
+                host = allowdeny_net.get_text()
+                if host[0] != '[':
+                    host = '[' + host
+
+                if host[-1] != ']':
+                    host = host + ']'
+
+                allowdeny_net.set_text(host)
+
+
             #TODO: validate input
             if allowdeny_type.get_active() in [1, 3]:
                 store[path] = ['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())]
