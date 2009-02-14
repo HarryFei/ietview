@@ -500,7 +500,6 @@ class IetView(object):
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
         buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
-        buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Details for Client\n', 'Heading')
         buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % client.initiator, 'Heading2')
