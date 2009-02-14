@@ -38,6 +38,14 @@ class IetView(object):
         if self.main_window:
             self.main_window.connect('destroy', gtk.main_quit)
 
+        accel_group = gtk.AccelGroup()
+        self.main_window.add_accel_group(accel_group)
+        refresh = self.wTree.get_widget('refresh_menu_item')
+        refresh.add_accelerator('activate', accel_group, 
+                gtk.gdk.keyval_from_name('F5'),
+                0, gtk.ACCEL_VISIBLE)
+
+        
         self.target_store = gtk.TreeStore(str, str)
 
         self.target_list = self.wTree.get_widget('session_tree')
