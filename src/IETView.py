@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 #  IETView is a GUI tool used to manage iSCSI targets
 #  Copyright (C) 2008,2009 Jeffrey Panczyk <jpanczyk@gmail.com>
 #
@@ -16,6 +14,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import pygtk
 import gtk
 import gtk.glade
@@ -30,7 +29,11 @@ import target_addedit
 
 class IetView(object):
     def __init__(self):
-        self.gladefile = 'IETView.glade'
+        if os.path.exists('IETView.glade'):
+            self.gladefile = 'IETView.glade'
+        elif os.path.exists('/usr/share/IETView/IETView.glade'):
+            self.gladefile = '/usr/share/IETView/IETView.glade'
+
         self.wTree = gtk.glade.XML(self.gladefile)
 
         self.main_window = self.wTree.get_widget('main_window')
@@ -155,6 +158,9 @@ class IetView(object):
         self.wTree.signal_autoconnect (dic)
 
         self.reload_sessions()
+
+    def run(self):
+        gtk.main()
 
     def refresh_menu(self, menuitem):
         self.reload_sessions()
@@ -860,4 +866,4 @@ class IetView(object):
 
 if __name__ == '__main__':
     iet_view = IetView()
-    gtk.main()
+    iet_view.run()
