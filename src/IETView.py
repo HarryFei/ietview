@@ -122,6 +122,7 @@ class IetView(object):
                 'delete_menu_item_activate_cb' : self.delete_target_menu,
                 'quit_menu_item_activate_cb' : gtk.main_quit,
                 'refresh_menu_item_activate_cb' : self.refresh_menu,
+                'all_menu_item_activate_cb' : self.allowdeny_menu,
                 'options_menu_item_activate_cb' : self.options_menu,
                 'globaluser_add_clicked_cb' : self.add_user,
                 'globaluser_edit_clicked_cb' : self.edit_user,
@@ -134,6 +135,65 @@ class IetView(object):
               }
 
         self.wTree.signal_autoconnect (dic)
+
+        self.deny_store = gtk.ListStore(str)
+        self.allow_store = gtk.ListStore(str)
+
+        # Set up initiators.allow table
+        self.allow_list = self.wTree.get_widget('all_allow_list')
+        self.allow_list.set_model(self.allow_store)
+        allow_col = gtk.TreeViewColumn('Host or Subnet')
+        allow_cell = gtk.CellRendererText()
+        allow_col.pack_start(allow_cell, True)
+        allow_col.add_attribute(allow_cell, 'text', 0)
+        allow_col.set_sort_column_id(-1)
+        self.allow_list.append_column(allow_col)
+        self.allow_list.set_search_column(0)
+        self.allow_list.set_reorderable(False)
+        self.allow_list.set_headers_visible(False)
+
+        # Set up initiators.deny table
+        self.deny_list = self.wTree.get_widget('all_deny_list')
+        self.deny_list.set_model(self.deny_store)
+        deny_col = gtk.TreeViewColumn('Host or Subnet')
+        deny_cell = gtk.CellRendererText()
+        deny_col.pack_start(deny_cell, True)
+        deny_col.add_attribute(deny_cell, 'text', 0)
+        deny_col.set_sort_column_id(-1)
+        self.deny_list.append_column(deny_col)
+        self.deny_list.set_search_column(0)
+        self.deny_list.set_reorderable(False)
+        self.deny_list.set_headers_visible(False)
+
+        deny_add = self.wTree.get_widget('all_deny_add')
+        deny_add.connect('clicked',
+                         self.addedit_dialog.add_allowdeny,
+                         self.deny_list)
+
+        deny_edit = self.wTree.get_widget('all_deny_edit')
+        deny_edit.connect('clicked',
+                          self.addedit_dialog.edit_allowdeny,
+                          self.deny_list)
+
+        deny_delete = self.wTree.get_widget('all_deny_delete')
+        deny_delete.connect('clicked',
+                            self.addedit_dialog.delete_allowdeny,
+                            self.deny_list)
+
+        allow_add = self.wTree.get_widget('all_allow_add')
+        allow_add.connect('clicked',
+                          self.addedit_dialog.add_allowdeny,
+                          self.allow_list)
+
+        allow_edit = self.wTree.get_widget('all_allow_edit')
+        allow_edit.connect('clicked',
+                           self.addedit_dialog.edit_allowdeny,
+                           self.allow_list)
+
+        allow_delete = self.wTree.get_widget('all_allow_delete')
+        allow_delete.connect('clicked',
+                             self.addedit_dialog.delete_allowdeny,
+                             self.allow_list)
 
         self.reload_sessions()
 
@@ -635,6 +695,39 @@ class IetView(object):
         else:
             button.set_label('No')
  
+    def allowdeny_menu(self, menuitem):
+        allowdeny_menu = self.wTree.get_widget('global_allowdeny_dialog')
+
+        self.allow_store.clear()
+        if 'ALL' in self.iet_allow.targets:
+            for host in self.iet_allow.targets['ALL']:
+                self.allow_store.append([host])
+
+        self.deny_store.clear()
+        if 'ALL' in self.iet_deny.targets:
+            for host in self.iet_deny.targets['ALL']:
+                self.deny_store.append([host])
+
+        response = allowdeny_menu.run()
+        allowdeny_menu.hide()
+
+        if response == 1:
+            allow_hosts = []
+
+            for row in self.allow_store:
+                allow_hosts.append(row[0])
+
+            self.iet_allow.targets['ALL'] = allow_hosts
+            self.iet_allow.write('/etc/initiators.allow')
+
+            deny_hosts = []
+
+            for row in self.deny_store:
+                deny_hosts.append(row[0])
+
+            self.iet_deny.targets['ALL'] = deny_hosts
+            self.iet_deny.write('/etc/initiators.deny')
+
     def options_menu(self, menuitem):
         options_menu = self.wTree.get_widget('global_options_dialog')
         user_list = self.wTree.get_widget('globaluser_list')
