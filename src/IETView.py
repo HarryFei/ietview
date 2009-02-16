@@ -31,6 +31,8 @@ class IetView(object):
     def __init__(self):
         if os.path.exists('IETView.glade'):
             self.gladefile = 'IETView.glade'
+        elif os.path.exists('src/IETView.glade'):
+            self.gladefile = 'src/IETView.glade'
         elif os.path.exists('/usr/share/IETView/IETView.glade'):
             self.gladefile = '/usr/share/IETView/IETView.glade'
 
