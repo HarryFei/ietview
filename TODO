@@ -14,8 +14,6 @@
 
 - All options can probably be updates (no adds)
 
-- Lots of options 'stretches out' the add/edit dialog permanently.  Either prevent that from happening, or return to normal size each time.
-
 - Fully support Lun configurations (e.g. nullio)
 
 - Put in a warning that if a user has deselected active and saved, that all record of the target will be lost.
