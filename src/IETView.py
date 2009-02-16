@@ -77,31 +77,6 @@ class IetView(object):
 
         self.addedit_dialog = target_addedit.TargetAddEdit(self.wTree)
 
-        # Set up global options table
-        globalop_list = self.wTree.get_widget('globalop_list')
-        self.globalop_store = gtk.ListStore(str, str)
-        globalop_list.set_model(self.globalop_store)
-        option_col = gtk.TreeViewColumn('Key')
-        option_cell = gtk.CellRendererText()
-        option_col.pack_start(option_cell, True)
-        option_col.add_attribute(option_cell, 'text', 0)
-        option_col.set_sort_column_id(-1)
-        globalop_list.append_column(option_col)
-
-        option_col = gtk.TreeViewColumn('Value')
-        option_cell = gtk.CellRendererText()
-        option_col.pack_start(option_cell, True)
-        option_col.add_attribute(option_cell, 'text', 1)
-        option_col.set_sort_column_id(-1)
-        globalop_list.append_column(option_col)
-
-        globalop_list.set_search_column(0)
-        globalop_list.set_reorderable(False)
-
-        self.globalop_names = gtk.ListStore(str)
-        for name in ['OutgoingUser', 'iSNSServer', 'iSNSAccessControl']:
-            self.globalop_names.append([name])
-
         # Set up Global Users list
         globaluser_list = self.wTree.get_widget('globaluser_list')
         self.globaluser_store = gtk.ListStore(str, str)
@@ -148,12 +123,13 @@ class IetView(object):
                 'quit_menu_item_activate_cb' : gtk.main_quit,
                 'refresh_menu_item_activate_cb' : self.refresh_menu,
                 'options_menu_item_activate_cb' : self.options_menu,
-                'globalop_add_clicked_cb' : self.add_option,
-                'globalop_edit_clicked_cb' : self.edit_option,
-                'globalop_delete_clicked_cb' : self.delete_option,
                 'globaluser_add_clicked_cb' : self.add_user,
                 'globaluser_edit_clicked_cb' : self.edit_user,
                 'globaluser_delete_clicked_cb' : self.delete_user,
+                'isnsserver_check_toggled_cb' : self.toggle_isnsserver,
+                'isnsac_check_toggled_cb' : self.toggle_isnsac,
+                'outuser_check_toggled_cb' : self.toggle_outuser,
+                'isnsac_toggle_toggled_cb' : self.toggle_isnsac_toggle,
                 'about_menu_item_activate_cb' : self.about
               }
 
@@ -637,16 +613,57 @@ class IetView(object):
             cell.set_property('weight', pango.WEIGHT_NORMAL)
             cell.set_property('scale', pango.SCALE_MEDIUM)
 
+    def toggle_isnsserver(self, button):
+        entry = self.wTree.get_widget('isnsserver_entry')
+
+        entry.set_sensitive(button.get_active())
+
+    def toggle_isnsac(self, button):
+        entry = self.wTree.get_widget('isnsac_toggle')
+
+        entry.set_sensitive(button.get_active())
+
+    def toggle_outuser(self, button):
+        user_entry = self.wTree.get_widget('outuser_name')
+        pass_entry = self.wTree.get_widget('outuser_pass')
+        user_entry.set_sensitive(button.get_active())
+        pass_entry.set_sensitive(button.get_active())
+
+    def toggle_isnsac_toggle(self, button):
+        if button.get_active():
+            button.set_label('Yes')
+        else:
+            button.set_label('No')
+ 
     def options_menu(self, menuitem):
         options_menu = self.wTree.get_widget('global_options_dialog')
-        options_list = self.wTree.get_widget('globalop_list')
         user_list = self.wTree.get_widget('globaluser_list')
+        isnsserver_check = self.wTree.get_widget('isnsserver_check')
+        isnsserver_entry = self.wTree.get_widget('isnsserver_entry')
+        isnsac_check = self.wTree.get_widget('isnsac_check')
+        isnsac_toggle = self.wTree.get_widget('isnsac_toggle')
+        outuser_check = self.wTree.get_widget('outuser_check')
+        user_entry = self.wTree.get_widget('outuser_name')
+        pass_entry = self.wTree.get_widget('outuser_pass')
 
-        self.globalop_store.clear()
         self.globaluser_store.clear()
 
+        isnsserver_check.set_active(False)
+        isnsac_check.set_active(False)
+        outuser_check.set_active(False)
+
         for key, val in self.ietc.options.iteritems():
-            self.globalop_store.append([key, val])
+            if key == 'OutgoingUser':
+                outuser_check.set_active(True)
+                user, passwd = val.split('/')
+                user_entry.set_text(user)
+                pass_entry.set_text(passwd)
+            elif key == 'iSNSServer':
+                isnsserver_check.set_active(True)
+                isnsserver_entry.set_text(val)
+            elif key == 'iSNSAccessControl':
+                isnsac_check.set_active(True)
+                isnsac_toggle.set_active(val == 'Yes')
 
         for user, passwd in self.ietc.users.iteritems():
             self.globaluser_store.append([user, passwd])
@@ -655,31 +672,43 @@ class IetView(object):
         options_menu.hide()
 
         if response == 1:
+            active = isnsserver_check.get_active()
+            key = 'iSNSServer'
+            val = isnsserver_entry.get_text()
+
+            if active:
+                self.ietc.options[key] = val
+            elif key in self.ietc.options:
+                del self.ietc.options[key]
+
+            active = isnsac_check.get_active()
+            key = 'iSNSAccessControl'
+            if isnsac_toggle.get_active():
+                val = 'Yes'
+            else:
+                val = 'No'
+
+            if active:
+                self.ietc.options[key] = val
+            elif key in self.ietc.options:
+                del self.ietc.options[key]
+
+            active = outuser_check.get_active()
+            key = 'OutgoingUser'
+            val = user_entry.get_text() + '/' + pass_entry.get_text()
             adm = ietadm.IetAdm()
-            newopts = {}
-            for key, val in self.globalop_store:
-                out = 0
-                if key == 'OutgoingUser':
-                    out = 1
 
-                newopts[key] = val
-
+            if active:
                 if key not in self.ietc.options:
-                    self.ietc.options[key] = val
-                    if out:
-                        adm.add_option(-1, key, val)
+                    adm.add_option(-1, key, val)
                 elif val != self.ietc.options[key]:
-                    self.ietc.options[key] = val
-                    if out:
-                        adm.delete_option(-1, key, val)
-                        adm.add_option(-1, key, val)
+                    adm.delete_option(-1, key, val)
+                    adm.add_option(-1, key, val)
 
-            for key, val in self.ietc.options.iteritems():
-                if key not in newopts:
-                    if out:
-                        adm.delete_option(-1, key, val)
-
-                    del self.ietc.options[key]
+                self.ietc.options[key] = val
+            elif key in self.ietc.options:
+                adm.delete_option(-1, key, val)
+                del self.ietc.options[key]
 
             newusers = {}
             for uname, passwd in self.globaluser_store:
@@ -699,105 +728,6 @@ class IetView(object):
                     del self.ietc.users[uname]
 
             self.ietc.write('/etc/ietd.conf')
-
-    def add_option(self, button):
-        option_addedit = self.wTree.get_widget('option_addedit_dialog')
-        option_name = self.wTree.get_widget('option_name')
-        option_value = self.wTree.get_widget('option_value')
-        option_password = self.wTree.get_widget('option_password')
-        option_password_label = self.wTree.get_widget('option_password_label')
-
-        old_model = option_name.get_model()
-        option_name.set_model(self.globalop_names)
-
-        option_name.set_active(-1)
-        option_value.set_text('')
-        option_password.set_text('')
-        option_password.hide()
-        option_password_label.hide()
-
-        response = option_addedit.run()
-        option_addedit.hide()
-
-        if response == 1:
-            #TODO: validate input
-            if option_name.get_active_text() == 'OutgoingUser':
-                self.globalop_store.append([ option_name.get_active_text(), '%s/%s' % (option_value.get_text(), option_password.get_text()) ])
-            else:
-                self.globalop_store.append([ option_name.get_active_text(), option_value.get_text() ])
-
-        option_name.set_model(old_model)
-
-
-    def edit_option(self, button):
-        option_addedit = self.wTree.get_widget('option_addedit_dialog')
-        option_name = self.wTree.get_widget('option_name')
-        option_value = self.wTree.get_widget('option_value')
-        option_password = self.wTree.get_widget('option_password')
-        option_password_label = self.wTree.get_widget('option_password_label')
-        options_list = self.wTree.get_widget('globalop_list')
-
-        path, col = options_list.get_cursor()
-        if path == None:
-            return
-
-        key, value = self.globalop_store[path]
-
-        old_model = option_name.get_model()
-        option_name.set_model(self.globalop_names)
-
-        option_name.set_active(self.addedit_dialog.options.index(key))
-
-        if key == 'OutgoingUser':
-            user, password = value.split('/')
-
-            option_value.set_text(user)
-            option_password.set_text(password)
-            option_password.show()
-            option_password_label.show()
-        else:
-            option_value.set_text(value)
-            option_password.set_text('')
-            option_password.hide()
-            option_password_label.hide()
-
-        option_value.grab_focus()
-
-        response = option_addedit.run()
-        option_addedit.hide()
-
-        if response == 1:
-            #TODO: validate input
-            if option_name.get_active_text() == 'OutgoingUser':
-                self.globalop_store[path] = [option_name.get_active_text(),
-                                           '%s/%s' % (option_value.get_text(),
-                                                    option_password.get_text())]
-            else:
-                self.globalop_store[path] = [option_name.get_active_text(),
-                                             option_value.get_text()]
-
-        option_name.set_model(old_model)
-
-    def delete_option(self, button):
-        options_list = self.wTree.get_widget('globalop_list')
-        path, col = options_list.get_cursor()
-        if path == None:
-            return
-
-        key, value = self.globalop_store[path]
-
-        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
-                                type = gtk.MESSAGE_QUESTION,
-                                buttons = gtk.BUTTONS_YES_NO,
-                                message_format = 'Delete this option?\n%s = %s'
-                                                 % (key, value))
-
-        response = msg.run()
-
-        if response == gtk.RESPONSE_YES:
-            del self.globalop_store[path]
-
-        msg.destroy()
 
     def add_user(self, button):
         user_addedit = self.wTree.get_widget('user_addedit_dialog')

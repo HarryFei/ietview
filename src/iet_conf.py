@@ -76,7 +76,9 @@ class IetConfFile(object):
         'ErrorRecoveryLevel',
         'HeaderDigest',
         'DataDigest',
-        'Wthreads' ]
+        'Wthreads',
+        'iSNSServer',
+        'iSNSAccessControl']
 
     def __init__(self):
         self.targets = {}
