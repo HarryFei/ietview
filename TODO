@@ -22,3 +22,7 @@
 
 - Right click context menu, including a forced reload.
 
+- double click on anything in target or options should open up the edit appropriate edit dialog.
+
+- Should save window size for next time.
+

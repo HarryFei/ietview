@@ -483,9 +483,10 @@ class IetView(object):
         buf = gtk.TextBuffer()
         buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
+        buf.create_tag('Heading3', scale=pango.SCALE_LARGE, paragraph_background='grey')
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Details for Target\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), '\nDetails for Target\n', 'Heading')
         buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % target, 'Heading2')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
@@ -493,13 +494,21 @@ class IetView(object):
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
         buf.insert(buf.get_end_iter(), target + '\n')
+        buf.insert(buf.get_end_iter(), '\n')
 
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'LUNS\n', 'Heading3')
         vol = self.ietv.volumes[tid]
+        first = 1
         for lk in sorted(vol.luns.iterkeys()):
             lun = vol.luns[lk]
 
+            if first:
+                first = 0
+            else:
+                buf.insert(buf.get_end_iter(), '\n')
+
             buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                         'LUN: ', 'Bold')
+                                         '\tLUN ID: ', 'Bold')
 
             buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
             buf.insert_with_tags_by_name(buf.get_end_iter(),
@@ -519,27 +528,33 @@ class IetView(object):
 
             buf.insert(buf.get_end_iter(), lun.iomode + '\n')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny\n', 'Heading3')
 
         if target in self.iet_deny.targets:
-            buf.insert(buf.get_end_iter(),
-                       str(self.iet_deny.targets[target]) + '\n')
+            hosts = self.iet_deny.targets[target]
+            for host in hosts:
+                buf.insert(buf.get_end_iter(), '\t' + host + '\n')
         else:
             buf.insert(buf.get_end_iter(), '\n')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow\n', 'Heading3')
 
         if target in self.iet_allow.targets:
-            buf.insert(buf.get_end_iter(),
-                       str(self.iet_allow.targets[target]) + '\n')
+            hosts = self.iet_allow.targets[target]
+            for host in hosts:
+                buf.insert(buf.get_end_iter(), '\t' + host + '\n')
         else:
             buf.insert(buf.get_end_iter(), '\n')
 
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Options\n', 'Heading3')
         adm = ietadm.IetAdm()
         params = {}
         adm.show(params, tid, sid=0)
         for key in sorted(params.iterkeys()):
-            buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), '\t' + key, 'Bold')
             buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
 
         self.target_details.set_buffer(buf)
@@ -552,8 +567,9 @@ class IetView(object):
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
         buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
+        buf.create_tag('Heading3', scale=pango.SCALE_LARGE, paragraph_background='grey')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Details for Client\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), '\nDetails for Client\n', 'Heading')
         buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % client.initiator, 'Heading2')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'SID: ', 'Bold')
@@ -571,6 +587,7 @@ class IetView(object):
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'DD: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.dd + '\n')
 
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Options\n', 'Heading3')
         adm = ietadm.IetAdm()
         params = {}
         adm.show(params, self.iets.sessions[target].tid, client.sid)
@@ -579,7 +596,6 @@ class IetView(object):
         for key in keys:
             buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
             buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
-
 
         self.target_details.set_buffer(buf)
 
@@ -590,19 +606,28 @@ class IetView(object):
         buf = gtk.TextBuffer()
         buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
+        buf.create_tag('Heading3', scale=pango.SCALE_LARGE, paragraph_background='grey')
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Details for Target\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), '\nDetails for Target\n', 'Heading')
         buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % tname, 'Heading2')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
         buf.insert(buf.get_end_iter(), tname + '\n')
+        buf.insert(buf.get_end_iter(), '\n')
 
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'LUNS\n', 'Heading3')
+        first = 1
         for lk in sorted(target.luns.iterkeys()):
             lun = target.luns[lk]
 
+            if first:
+                first = 0
+            else:
+                buf.insert(buf.get_end_iter(), '\n')
+
             buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                         'LUN: ', 'Bold')
+                                         '\tLUN ID: ', 'Bold')
 
             buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
             buf.insert_with_tags_by_name(buf.get_end_iter(),
@@ -614,27 +639,34 @@ class IetView(object):
 
             buf.insert(buf.get_end_iter(), lun.iotype + '\n')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny: ', 'Bold')
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny\n', 'Heading3')
 
         if tname in self.iet_deny.targets:
-            buf.insert(buf.get_end_iter(),
-                       str(self.iet_deny.targets[tname]) + '\n')
+            hosts = self.iet_deny.targets[tname]
+            for host in hosts:
+                buf.insert(buf.get_end_iter(), '\t' + host + '\n')
         else:
             buf.insert(buf.get_end_iter(), '\n')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow: ', 'Bold')
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Allow\n', 'Heading3')
 
         if tname in self.iet_allow.targets:
-            buf.insert(buf.get_end_iter(),
-                       str(self.iet_allow.targets[tname]) + '\n')
+            hosts = self.iet_allow.targets[tname]
+            for host in hosts:
+                buf.insert(buf.get_end_iter(), '\t' + host + '\n')
         else:
             buf.insert(buf.get_end_iter(), '\n')
 
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Options\n', 'Heading3')
         for key, value in target.options.iteritems():
-            buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), '\t' + key, 'Bold')
             buf.insert(buf.get_end_iter(), ': %s\n' % value)
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Incoming Users:\n', 'Bold')
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Incoming Users\n', 'Heading3')
         for uname, passwd in target.users.iteritems():
             buf.insert(buf.get_end_iter(), '\t%s/%s\n' % (uname, passwd))
 
@@ -886,6 +918,7 @@ class IetView(object):
 
     def about(self, menuitem):
         about = self.wTree.get_widget('about_dialog')
+        about.set_name('IETView')
         about.run()
         about.hide()
 
