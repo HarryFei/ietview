@@ -50,6 +50,9 @@ class IetAllowDeny(object):
                 del self.targets[target.name]
             elif type == my_type:
                 if op == iet_target.IetTarget.ADD:
+                    if target.name not in self.targets:
+                        self.targets[target.name] = []
+
                     self.targets[target.name].append(val)
                 elif op == iet_target.IetTarget.DELETE:
                     self.targets[target.name].remove(val)
