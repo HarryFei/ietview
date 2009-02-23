@@ -4,6 +4,8 @@
 
 - Add support for ietadm 0.4.17 (can get user info from ietadm)
 
+- If 0.4.17 is installed, then show the provisioned incoming users.
+
 - Fixup Details display.  Maybe have expandable categories or something.
 
 - Maybe just display/edit the options that are in the configuration file.  If the target is not in the configuration file, you can show all runtime option.  This might be confusing, however.
@@ -25,6 +27,4 @@
 - double click on anything in target or options should open up the edit appropriate edit dialog.
 
 - Should save window size for next time.  Also, save the position of the horizontal pane separator
-
-- Show configured incoming users if the target is in the config file.  If 0.4.17 is installed, then we can show the provisioned users instead.
 

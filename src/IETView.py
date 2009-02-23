@@ -591,6 +591,14 @@ class IetView(object):
         else:
             buf.insert(buf.get_end_iter(), '\n')
 
+        if target in self.ietc.targets:
+            buf.insert(buf.get_end_iter(), '\n')
+            buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                        'Incoming Users\n', 'Heading3')
+
+            for uname, passwd in self.ietc.targets[target].users.iteritems():
+                buf.insert(buf.get_end_iter(), '\t%s/%s\n' % (uname, passwd))
+
         buf.insert(buf.get_end_iter(), '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Options\n', 'Heading3')
         adm = ietadm.IetAdm()
@@ -729,18 +737,18 @@ class IetView(object):
 
         buf.insert(buf.get_end_iter(), '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Incoming Users\n', 'Heading3')
+
+        for uname, passwd in target.users.iteritems():
+            buf.insert(buf.get_end_iter(), '\t%s/%s\n' % (uname, passwd))
+
+        buf.insert(buf.get_end_iter(), '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
                                      'Options\n', 'Heading3')
 
         for key, value in target.options.iteritems():
             buf.insert_with_tags_by_name(buf.get_end_iter(), '\t' + key, 'Bold')
             buf.insert(buf.get_end_iter(), ': %s\n' % value)
-
-        buf.insert(buf.get_end_iter(), '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(),
-                                     'Incoming Users\n', 'Heading3')
-
-        for uname, passwd in target.users.iteritems():
-            buf.insert(buf.get_end_iter(), '\t%s/%s\n' % (uname, passwd))
 
         self.target_details.set_buffer(buf)
 
