@@ -217,6 +217,25 @@ class IetAdm(object):
 
         return 0
 
+    def delete_connection(self, tid, sid, cid):
+        cmnd = 'ietadm --op=delete --tid=%d --sid=%d --cid=%d' \
+                % (tid, sid, cid)
+
+        process = subprocess.Popen(cmnd, stderr=subprocess.STDOUT,
+                                   stdout=subprocess.PIPE, shell=True)
+
+        process.wait()
+
+        if process.returncode != 0:
+            print 'IETADM error:'
+            for line in process.stdout:
+                print '\t', line,
+            print 'Command was:', cmnd 
+
+            return process.returncode 
+
+        return 0
+
     def update(self, target, diff):
         for op, type, val in diff:
             if type == 'option':
