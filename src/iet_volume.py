@@ -31,11 +31,12 @@ class IetVolume(object):
 class IetVolumes(object):
     TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
     LUN_REGEX='lun:(?P<lun>\d+)\s+state:(?P<state>\d+)\s+iotype:(?P<iotype>\w+)\s+iomode:(?P<iomode>\w+)\s+path:(?P<path>.+)'
-    def __init__(self):
+    def __init__(self, filename):
         self.volumes = {}
+        self.filename = filename
 
-    def parse(self, filename):
-        f = file(filename, "r")
+    def parse_file(self):
+        f = file(self.filename, "r")
 
         tv = None
 

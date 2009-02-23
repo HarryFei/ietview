@@ -24,5 +24,7 @@
 
 - double click on anything in target or options should open up the edit appropriate edit dialog.
 
-- Should save window size for next time.
+- Should save window size for next time.  Also, save the position of the horizontal pane separator
+
+- Show configured incoming users if the target is in the config file.  If 0.4.17 is installed, then we can show the provisioned users instead.
 

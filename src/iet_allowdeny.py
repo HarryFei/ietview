@@ -13,16 +13,21 @@
 # You should have received a copy of the GNU General Public License
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 import iet_target
 
 class IetAllowDeny(object):
     ALLOWDENY_REGEX='\s*(?P<target>\S+)\s+(?P<hosts>.+)'
-    def __init__(self):
+    def __init__(self, filename):
         self.targets = {}
+        self.filename = filename
 
-    def parse(self, filename):
-        f = open(filename, 'r')
+    def parse_file(self):
+        if os.path.exists(self.filename):
+            f = open(self.filename, 'r')
+        else:
+            return
 
         for line in f:
             if re.match('\s*#', line): continue
@@ -57,8 +62,8 @@ class IetAllowDeny(object):
                 elif op == iet_target.IetTarget.DELETE:
                     self.targets[target.name].remove(val)
     
-    def write(self, filename):
-        f = open(filename, 'w')
+    def write(self):
+        f = open(self.filename, 'w')
 
         for target, hosts in self.targets.iteritems():
             f.write('%s %s\n' % (target, ', '.join(hosts)))

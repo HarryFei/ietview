@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 import iet_target
 
@@ -80,11 +81,12 @@ class IetConfFile(object):
         'iSNSServer',
         'iSNSAccessControl']
 
-    def __init__(self):
+    def __init__(self, filename):
         self.targets = {}
         self.users = {}
         self.options = {}
         self.inactive_targets = {}
+        self.filename = filename
 
     def add_target(self, name, active, **kwargs):
         if active:
@@ -108,8 +110,8 @@ class IetConfFile(object):
         else:
             del self.inactive_targets[name]
 
-    def write(self, filename):
-        f = file(filename, 'w')
+    def write(self):
+        f = file(self.filename, 'w')
 
         f.write('# Written by IETView.py\n')
         f.write('# Global discovery options\n')
@@ -139,8 +141,11 @@ class IetConfFile(object):
 
         f.close()
 
-    def parse(self, filename):
-        f = file(filename, 'r')
+    def parse_file(self):
+        if os.path.exists(self.filename):
+            f = file(self.filename, 'r')
+        else:
+            return
 
         # state = -1: haven't seen a target yet
         # state = 0: active (uncommented) target

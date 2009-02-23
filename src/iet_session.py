@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 
 class IetSession(object):
@@ -44,11 +45,12 @@ class IetSessions(object):
     INITIATOR_REGEX='sid:(?P<sid>\d+)\s+initiator:(?P<init>.+)'
     CLIENT_REGEX='cid:(?P<cid>\d+)\s+ip:(?P<ip>[0-9\.]+)\s+state:(?P<state>\w+)\s+hd:(?P<hd>\w+)\s+dd:(?P<dd>\w+)'
 
-    def __init__(self):
+    def __init__(self, filename):
         self.sessions = {}
+        self.filename = filename
 
-    def parse(self, filename):
-        f = file(filename, 'r')
+    def parse_file(self):
+        f = file(self.filename, 'r')
 
         session = None
         client = None

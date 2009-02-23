@@ -15,10 +15,13 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
+
 import pygtk
 import gtk
 import gtk.glade
 import pango
+
 import iet_session
 import iet_volume
 import iet_allowdeny
@@ -28,16 +31,25 @@ import ietadm
 import target_addedit
 
 class IetView(object):
+    CONF_FILE_PATH = '/etc/ietd.conf'
+    INITIATORS_ALLOW_PATH = '/etc/initiators.allow'
+    INITIATORS_DENY_PATH = '/etc/initiators.deny'
+    SESSION_PATH = '/proc/net/iet/session'
+    VOLUME_PATH = '/proc/net/iet/volume'
+    GLADE_FILE_PATH = '/usr/share/IETView/IETView.glade'
+
     def __init__(self):
-        if os.path.exists('IETView.glade'):
-            self.gladefile = 'IETView.glade'
-        elif os.path.exists('src/IETView.glade'):
+        if os.path.exists('src/IETView.glade'):
             self.gladefile = 'src/IETView.glade'
-        elif os.path.exists('/usr/share/IETView/IETView.glade'):
-            self.gladefile = '/usr/share/IETView/IETView.glade'
+        elif os.path.exists(self.GLADE_FILE_PATH):
+            self.gladefile = self.GLADE_FILE_PATH
+        else:
+            print 'Could not find critial resource file IETView.glade.\n' \
+                  'Is IETView installed correctly?'
+
+            sys.exit(1)
 
         self.wTree = gtk.glade.XML(self.gladefile)
-
         self.main_window = self.wTree.get_widget('main_window')
 
         if self.main_window:
@@ -206,33 +218,53 @@ class IetView(object):
     def reload_sessions(self):
         self.target_store.clear()
 
-        self.iets = iet_session.IetSessions()
-        self.iets.parse('/proc/net/iet/session')
+        self.iets = iet_session.IetSessions(self.SESSION_PATH)
+        self.ietv = iet_volume.IetVolumes(self.VOLUME_PATH) 
 
-        self.ietc = iet_conf.IetConfFile()
-        self.ietc.parse('/etc/ietd.conf')
+        try:
+            self.iets.parse_file()
+            self.ietv.parse_file()
+        except IOError, inst:
+            msg_str = '%s could not be opened.  Verify that iSCSI ' \
+                      'Enterprise Target software is running correctly.\n' \
+                      % inst.filename
 
-        active_targets = self.target_store.append(None, ['Active Targets', ''])
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                     type = gtk.MESSAGE_ERROR,
+                     buttons = gtk.BUTTONS_CLOSE,
+                     message_format = msg_str)     
+
+            msg.run()
+            msg.destroy()
+
+        self.ietc = iet_conf.IetConfFile(self.CONF_FILE_PATH)
+        self.ietc.parse_file()
+
+        self.iet_allow = iet_allowdeny.IetAllowDeny(
+                                self.INITIATORS_ALLOW_PATH)
+        self.iet_allow.parse_file()
+
+        self.iet_deny = iet_allowdeny.IetAllowDeny(
+                                self.INITIATORS_DENY_PATH)
+        self.iet_deny.parse_file()
+
+        active_targets = self.target_store.append(None,
+                                                  ['Active Targets', ''])
         
         for session in self.iets.sessions.itervalues():
-            piter = self.target_store.append(active_targets, [ session.target, '' ])
+            piter = self.target_store.append(active_targets,
+                                             [ session.target, '' ])
+
             for client in session.clients.itervalues():
                 self.target_store.append(piter,
-                           [ '%s/%s (%s)' % (client.ip, client.initiator, client.state), client.initiator ])
+                           [ '%s/%s (%s)' % (client.ip, client.initiator,
+                               client.state), client.initiator ])
 
-        disabled_targets = self.target_store.append(None, ['Disabled Targets', ''])
+        disabled_targets = self.target_store.append(None,
+                                                    ['Disabled Targets', ''])
 
         for target in self.ietc.inactive_targets.itervalues():
             self.target_store.append(disabled_targets, [ target.name, '' ])
-
-        self.ietv = iet_volume.IetVolumes()
-        self.ietv.parse('/proc/net/iet/volume') 
-
-        self.iet_allow = iet_allowdeny.IetAllowDeny()
-        self.iet_allow.parse('/etc/initiators.allow')
-
-        self.iet_deny = iet_allowdeny.IetAllowDeny()
-        self.iet_deny.parse('/etc/initiators.deny')
 
         self.target_list.expand_row((0), False)
 
@@ -250,8 +282,8 @@ class IetView(object):
         msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
                                 type = gtk.MESSAGE_QUESTION,
                                 buttons = gtk.BUTTONS_YES_NO,
-                                message_format = 
-                                  'Permanently delete this target?\n%s' % tname)
+                                message_format = 'Permanently delete this ' \
+                                                 'target?\n%s' % tname)
 
         response = msg.run()
 
@@ -262,24 +294,39 @@ class IetView(object):
 
             if tname in self.ietc.targets:
                 del self.ietc.targets[tname]
-                self.ietc.write('/etc/ietd.conf')
 
             if tname in self.ietc.inactive_targets:
                 del self.ietc.inactive_targets[tname]
-                self.ietc.write('/etc/ietd.conf')
 
             if tname in self.iet_deny.targets:
                 del self.iet_deny.targets[tname]
-                self.iet_deny.write('/etc/initiators.deny')
 
             if tname in self.iet_allow.targets:
                 del self.iet_allow.targets[tname]
-                self.iet_allow.write('/etc/initiators.allow')
 
+            self.commit_files()
             self.reload_sessions()
             self.target_details.set_buffer(gtk.TextBuffer())
 
         msg.destroy()
+
+    def commit_files(self):
+        try:
+            self.ietc.write()
+            self.iet_deny.write()
+            self.iet_allow.write()
+        except IOError, inst:
+            msg_str = 'The following error occurred when attempting to ' \
+                      'write to %s\nI\O error(%d): %s' \
+                      % (inst.filename, inst.errno, inst.strerror)
+
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                     type = gtk.MESSAGE_ERROR,
+                     buttons = gtk.BUTTONS_CLOSE,
+                     message_format = msg_str)     
+
+            response = msg.run()
+            msg.destroy()
 
     def get_next_tid(self):
         tids = []
@@ -298,7 +345,6 @@ class IetView(object):
 
         return next_tid
  
-        
     def add_target_from_dialog(self, tid, active, saved, dialog):
         tname = dialog.tname.get_text()
 
@@ -321,15 +367,9 @@ class IetView(object):
             for host in dialog.deny_store:
                 self.iet_deny.add_host(tname, host[0])
     
-            self.iet_deny.write('/etc/initiators.deny')
-    
             for host in dialog.allow_store:
                 self.iet_allow.add_host(tname, host[0])
     
-            self.iet_allow.write('/etc/initiators.allow')
-
-            self.ietc.write('/etc/ietd.conf')
-
         if active:
             adm = ietadm.IetAdm()
             adm.add_target(tid, tname)
@@ -348,13 +388,9 @@ class IetView(object):
             for host in dialog.deny_store:
                 self.iet_deny.add_host(tname, host[0])
     
-            self.iet_deny.write('/etc/initiators.deny')
-    
             for host in dialog.allow_store:
                 self.iet_allow.add_host(tname, host[0])
-    
-            self.iet_allow.write('/etc/initiators.allow')
- 
+
     def add_target_menu(self, menuitem):
         """ Add Menu Item Clicked """
         self.add_target(None)
@@ -370,6 +406,7 @@ class IetView(object):
         tid = self.get_next_tid()
         self.add_target_from_dialog(tid, active, saved, self.addedit_dialog)
    
+        self.commit_files()
         self.reload_sessions()
 
     def edit_target_menu(self, menuitem):
@@ -446,34 +483,31 @@ class IetView(object):
                 self.ietc.disable_target(old)
                 active = False
                 old.active = False
-                self.ietc.write('/etc/ietd.conf')
             elif type == 'saved' and val == False:
                 self.ietc.delete_target(old.name, old.active)
-                self.ietc.write('/etc/ietd.conf')
                 saved = False
 
         if active:
             adm.update(old, diff)
 
         self.iet_allow.update(old, diff, 'allow')
-        self.iet_allow.write('/etc/initiators.allow')
         self.iet_deny.update(old, diff, 'deny')
-        self.iet_deny.write('/etc/initiators.deny')
 
         if saved:
             self.ietc.update(old, diff)
-            self.ietc.write('/etc/ietd.conf')
 
         for op, type, val in diff:
             if type == 'active' and val == True:
                 tid = self.get_next_tid()
-                self.add_target_from_dialog(tid, True, False, self.addedit_dialog)
-                self.ietc.activate_target(old)
-                self.ietc.write('/etc/ietd.conf')
-            elif type == 'saved' and val == True:
-                self.add_target_from_dialog(old.tid, False, True, self.addedit_dialog)
-                self.ietc.write('/etc/ietd.conf')
+                self.add_target_from_dialog(tid, True, False,
+                                            self.addedit_dialog)
 
+                self.ietc.activate_target(old)
+            elif type == 'saved' and val == True:
+                self.add_target_from_dialog(old.tid, False, True,
+                                            self.addedit_dialog)
+
+        self.commit_files()
         self.reload_sessions()
 
     def show_session_details(self, path):
@@ -481,19 +515,28 @@ class IetView(object):
         tid = self.iets.sessions[target].tid
 
         buf = gtk.TextBuffer()
-        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
+        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE,
+                                  weight=pango.WEIGHT_BOLD,
+                                  variant=pango.VARIANT_SMALL_CAPS)
+
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
-        buf.create_tag('Heading3', scale=pango.SCALE_LARGE, paragraph_background='grey')
+        buf.create_tag('Heading3', scale=pango.SCALE_LARGE,
+                                   paragraph_background='grey')
+
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), '\nDetails for Target\n', 'Heading')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % target, 'Heading2')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     '\nDetails for Target\n', 'Heading')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'TID: ', 'Bold')
-        buf.insert(buf.get_end_iter(), str(tid) + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     '%s\n\n' % target, 'Heading2')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
         buf.insert(buf.get_end_iter(), target + '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Target ID: ', 'Bold')
+        buf.insert(buf.get_end_iter(), str(tid) + '\n')
+
         buf.insert(buf.get_end_iter(), '\n')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'LUNS\n', 'Heading3')
@@ -565,36 +608,55 @@ class IetView(object):
         client = self.iets.sessions[target].clients[initiator]
         buf = gtk.TextBuffer()
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
-        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
+        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE,
+                                  weight=pango.WEIGHT_BOLD, 
+                                  variant=pango.VARIANT_SMALL_CAPS)
+
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
-        buf.create_tag('Heading3', scale=pango.SCALE_LARGE, paragraph_background='grey')
+        buf.create_tag('Heading3', scale=pango.SCALE_LARGE,
+                                   paragraph_background='grey')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), '\nDetails for Client\n', 'Heading')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % client.initiator, 'Heading2')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     '\nDetails for Connection\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     '%s\n\n' % client.initiator, 'Heading2')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'SID: ', 'Bold')
-        buf.insert(buf.get_end_iter(), str(client.sid) + '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Initiator Name: ', 'Bold')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Initiator Name: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.initiator + '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'CID: ', 'Bold')
-        buf.insert(buf.get_end_iter(), str(client.cid) + '\n')
+
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'IP: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.ip + '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'State: ', 'Bold')
+        
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Connection State: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.state + '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'HD: ', 'Bold')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Session ID: ', 'Bold')
+        buf.insert(buf.get_end_iter(), str(client.sid) + '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Connection ID: ', 'Bold')
+        buf.insert(buf.get_end_iter(), str(client.cid) + '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Header Digest State: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.hd + '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'DD: ', 'Bold')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Data Digest State: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.dd + '\n')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Options\n', 'Heading3')
+        buf.insert(buf.get_end_iter(), client.dd + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Session Parameters\n', 'Heading3')
         adm = ietadm.IetAdm()
         params = {}
         adm.show(params, self.iets.sessions[target].tid, client.sid)
         keys = params.keys()
         keys.sort()
         for key in keys:
-            buf.insert_with_tags_by_name(buf.get_end_iter(), key, 'Bold')
+            buf.insert_with_tags_by_name(buf.get_end_iter(), '\t' + key, 'Bold')
             buf.insert(buf.get_end_iter(), ': %s\n' % params[key])
 
         self.target_details.set_buffer(buf)
@@ -604,13 +666,19 @@ class IetView(object):
         target = self.ietc.inactive_targets[tname]
 
         buf = gtk.TextBuffer()
-        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE, weight=pango.WEIGHT_BOLD, variant=pango.VARIANT_SMALL_CAPS)
+        buf.create_tag('Heading', scale=pango.SCALE_X_LARGE,
+                                  weight=pango.WEIGHT_BOLD,
+                                  variant=pango.VARIANT_SMALL_CAPS)
+
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
-        buf.create_tag('Heading3', scale=pango.SCALE_LARGE, paragraph_background='grey')
+        buf.create_tag('Heading3', scale=pango.SCALE_LARGE,
+                                   paragraph_background='grey')
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), '\nDetails for Target\n', 'Heading')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), '%s\n\n' % tname, 'Heading2')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     '\nDetails for Target\n', 'Heading')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     '%s\n\n' % tname, 'Heading2')
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Name: ', 'Bold')
         buf.insert(buf.get_end_iter(), tname + '\n')
@@ -660,13 +728,17 @@ class IetView(object):
             buf.insert(buf.get_end_iter(), '\n')
 
         buf.insert(buf.get_end_iter(), '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Options\n', 'Heading3')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Options\n', 'Heading3')
+
         for key, value in target.options.iteritems():
             buf.insert_with_tags_by_name(buf.get_end_iter(), '\t' + key, 'Bold')
             buf.insert(buf.get_end_iter(), ': %s\n' % value)
 
         buf.insert(buf.get_end_iter(), '\n')
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 'Incoming Users\n', 'Heading3')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                     'Incoming Users\n', 'Heading3')
+
         for uname, passwd in target.users.iteritems():
             buf.insert(buf.get_end_iter(), '\t%s/%s\n' % (uname, passwd))
 
@@ -750,7 +822,6 @@ class IetView(object):
                 allow_hosts.append(row[0])
 
             self.iet_allow.targets['ALL'] = allow_hosts
-            self.iet_allow.write('/etc/initiators.allow')
 
             deny_hosts = []
 
@@ -758,7 +829,7 @@ class IetView(object):
                 deny_hosts.append(row[0])
 
             self.iet_deny.targets['ALL'] = deny_hosts
-            self.iet_deny.write('/etc/initiators.deny')
+            self.commit_files()
 
     def options_menu(self, menuitem):
         options_menu = self.wTree.get_widget('global_options_dialog')
@@ -852,7 +923,7 @@ class IetView(object):
                     adm.delete_user(-1, uname)
                     del self.ietc.users[uname]
 
-            self.ietc.write('/etc/ietd.conf')
+            self.commit_files()
 
     def add_user(self, button):
         user_addedit = self.wTree.get_widget('user_addedit_dialog')
