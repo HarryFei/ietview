@@ -599,6 +599,9 @@ class IetView(object):
             for uname, passwd in self.ietc.targets[target].users.iteritems():
                 buf.insert(buf.get_end_iter(), '\t%s/%s\n' % (uname, passwd))
 
+            if len(self.ietc.targets[target].users) == 0:
+                buf.insert(buf.get_end_iter(), '\n')
+
         buf.insert(buf.get_end_iter(), '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Options\n', 'Heading3')
         adm = ietadm.IetAdm()
@@ -655,7 +658,7 @@ class IetView(object):
                                      'Data Digest State: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.dd + '\n')
 
-        buf.insert(buf.get_end_iter(), client.dd + '\n')
+        buf.insert(buf.get_end_iter(), '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(),
                                      'Session Parameters\n', 'Heading3')
         adm = ietadm.IetAdm()
