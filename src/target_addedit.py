@@ -256,6 +256,9 @@ class TargetAddEdit(object):
 
             self.lun_store.append([ lun_path.get_text(), type ])
         
+    def edit_lun_activate(self, treeview, path, col):
+        return self.edit_lun(None)
+
     def edit_lun(self, button):
         path, col = self.lun_list.get_cursor()
         if path == None: return
@@ -329,6 +332,9 @@ class TargetAddEdit(object):
             else:
                 self.option_store.append([ option_name.get_active_text(), option_value.get_text() ])
 
+
+    def edit_option_activate(self, treeview, path, col):
+        return self.edit_option(None)
 
     def edit_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
@@ -424,6 +430,9 @@ class TargetAddEdit(object):
             self.user_store.append([user_name.get_text(),
                                     user_password.get_text()])
 
+    def edit_user_activate(self, treeview, path, col):
+        return self.edit_user(None)
+
     def edit_user(self, button):
         user_addedit = self.wTree.get_widget('user_addedit_dialog')
         user_name = self.wTree.get_widget('user_name')
@@ -500,6 +509,9 @@ class TargetAddEdit(object):
                 store.append(['%s/%s' % (allowdeny_net.get_text(), allowdeny_mask.get_text())])
             else:
                 store.append([allowdeny_net.get_text()])
+
+    def edit_allowdeny_activate(self, treeview, path, col):
+        return self.edit_allowdeny(None, treeview)
 
     def edit_allowdeny(self, button, view):
         allowdeny_addedit = self.wTree.get_widget('allowdeny_addedit_dialog')

@@ -119,16 +119,21 @@ class IetView(object):
                 'lun_add_clicked_cb' : self.addedit_dialog.add_lun,
                 'lun_edit_clicked_cb' : self.addedit_dialog.edit_lun,
                 'lun_delete_clicked_cb' : self.addedit_dialog.delete_lun,
+                'lun_list_row_activated_cb' : self.addedit_dialog.edit_lun_activate,
                 'lun_browse_clicked_cb' : self.addedit_dialog.path_browse_lun,
                 'lun_path_activate_cb' : self.addedit_dialog.lun_dialog_ok,
                 'option_add_clicked_cb' : self.addedit_dialog.add_option,
                 'option_edit_clicked_cb' : self.addedit_dialog.edit_option,
                 'option_delete_clicked_cb' : self.addedit_dialog.delete_option,
+                'option_list_row_activated_cb' : self.addedit_dialog.edit_option_activate,
                 'user_add_clicked_cb' : self.addedit_dialog.add_user,
                 'user_edit_clicked_cb' : self.addedit_dialog.edit_user,
                 'user_delete_clicked_cb' : self.addedit_dialog.delete_user,
+                'user_list_row_activated_cb' : self.addedit_dialog.edit_user_activate,
                 'option_name_changed_cb' : self.addedit_dialog.option_changed,
                 'allowdeny_type_changed_cb' : self.addedit_dialog.allowdeny_type_changed,
+                'allow_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate,
+                'deny_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate,
                 'add_menu_item_activate_cb' : self.add_target_menu,
                 'edit_menu_item_activate_cb' : self.edit_target_menu,
                 'delete_menu_item_activate_cb' : self.delete_target_menu,
@@ -139,11 +144,14 @@ class IetView(object):
                 'globaluser_add_clicked_cb' : self.add_user,
                 'globaluser_edit_clicked_cb' : self.edit_user,
                 'globaluser_delete_clicked_cb' : self.delete_user,
+                'globaluser_list_row_activated_cb' : self.edit_user_activate,
                 'isnsserver_check_toggled_cb' : self.toggle_isnsserver,
                 'isnsac_check_toggled_cb' : self.toggle_isnsac,
                 'outuser_check_toggled_cb' : self.toggle_outuser,
                 'isnsac_toggle_toggled_cb' : self.toggle_isnsac_toggle,
-                'about_menu_item_activate_cb' : self.about
+                'about_menu_item_activate_cb' : self.about,
+                'all_allow_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate,
+                'all_deny_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate
               }
 
         self.wTree.signal_autoconnect (dic)
@@ -952,6 +960,9 @@ class IetView(object):
             #TODO: validate input
             self.globaluser_store.append([user_name.get_text(),
                                     user_password.get_text()])
+
+    def edit_user_activate(self, treeview, path, col):
+        return self.edit_user(None)
 
     def edit_user(self, button):
         user_addedit = self.wTree.get_widget('user_addedit_dialog')
