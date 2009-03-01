@@ -20,8 +20,6 @@
 
 - Put in a warning that if a user has deselected active and saved, that all record of the target will be lost.
 
-- Able to 'kill' or 'delete' client sessions.
-
 - Right click context menu, including a forced reload.
 
 - Should save window size for next time.  Also, save the position of the horizontal pane separator

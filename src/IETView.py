@@ -63,7 +63,7 @@ class IetView(object):
                 0, gtk.ACCEL_VISIBLE)
 
         
-        self.target_store = gtk.TreeStore(str, str)
+        self.target_store = gtk.TreeStore(str, str, str, str, str)
 
         self.target_list = self.wTree.get_widget('session_tree')
         self.target_list.set_model(self.target_store)
@@ -215,6 +215,8 @@ class IetView(object):
                              self.addedit_dialog.delete_allowdeny,
                              self.allow_list)
 
+        self.tooltips = gtk.Tooltips()
+
         self.reload_sessions()
 
     def run(self):
@@ -257,22 +259,27 @@ class IetView(object):
         self.iet_deny.parse_file()
 
         active_targets = self.target_store.append(None,
-                                                  ['Active Targets', ''])
+                                                  ['Active Targets', '',
+                                                   '', '', ''])
         
         for session in self.iets.sessions.itervalues():
             piter = self.target_store.append(active_targets,
-                                             [ session.target, '' ])
+                                             [ session.target, '',
+                                               '', '', ''])
 
             for client in session.clients.itervalues():
                 self.target_store.append(piter,
-                           [ '%s/%s (%s)' % (client.ip, client.initiator,
-                               client.state), client.initiator ])
+                           ['%s/%s (%s)' % (client.ip, client.initiator,
+                            client.state), client.initiator, client.ip,
+                            client.sid, client.cid])
 
         disabled_targets = self.target_store.append(None,
-                                                    ['Disabled Targets', ''])
+                                                    ['Disabled Targets', '',
+                                                     '', '', ''])
 
         for target in self.ietc.inactive_targets.itervalues():
-            self.target_store.append(disabled_targets, [ target.name, '' ])
+            self.target_store.append(disabled_targets, [ target.name, '',
+                                                         '', '', ''])
 
         self.target_list.expand_row((0), False)
 
@@ -282,41 +289,73 @@ class IetView(object):
 
     def delete_target(self, button):
         path, col = self.target_list.get_cursor()
-        if path == None: return
-        if len(path) != 2: return
+        if path == None or len(path) not in [2, 3]:
+            return
 
-        tname = self.target_store[path][0]
+        if len(path) == 2:
+            #delete a target
+            tname = self.target_store[path][0]
 
-        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
-                                type = gtk.MESSAGE_QUESTION,
-                                buttons = gtk.BUTTONS_YES_NO,
-                                message_format = 'Permanently delete this ' \
-                                                 'target?\n%s' % tname)
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                    type = gtk.MESSAGE_QUESTION,
+                                    buttons = gtk.BUTTONS_YES_NO,
+                                    message_format = 'Permanently delete ' \
+                                                     'this target?\n%s' \
+                                                     % tname)
 
-        response = msg.run()
+            response = msg.run()
 
-        if response == gtk.RESPONSE_YES:
-            if path[0] == 0:
+            if response == gtk.RESPONSE_YES:
+                if path[0] == 0:
+                    adm = ietadm.IetAdm()
+                    adm.delete_target(self.iets.sessions[tname].tid)
+
+                if tname in self.ietc.targets:
+                    del self.ietc.targets[tname]
+
+                if tname in self.ietc.inactive_targets:
+                    del self.ietc.inactive_targets[tname]
+
+                if tname in self.iet_deny.targets:
+                    del self.iet_deny.targets[tname]
+
+                if tname in self.iet_allow.targets:
+                    del self.iet_allow.targets[tname]
+
+                self.commit_files()
+                self.reload_sessions()
+                self.target_details.set_buffer(gtk.TextBuffer())
+
+            msg.destroy()
+        elif len(path) == 3:
+            tname = self.target_store[path[0:2]][0]
+            initiator = self.target_store[path][1]
+            ip = self.target_store[path][2]
+            sid = self.target_store[path][3]
+            cid = self.target_store[path][4]
+            key = ip + '/' + initiator + '/' + str(sid) + '/' + str(cid)
+            client = self.iets.sessions[tname].clients[key]
+    
+
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                    type = gtk.MESSAGE_QUESTION,
+                                    buttons = gtk.BUTTONS_YES_NO,
+                                    message_format = 'Kill this client?\n%s' \
+                                                     % client.initiator)
+
+            response = msg.run()
+
+            if response == gtk.RESPONSE_YES:
                 adm = ietadm.IetAdm()
-                adm.delete_target(self.iets.sessions[tname].tid)
+                adm.delete_connection(tid=self.iets.sessions[tname].tid,
+                                      sid=client.sid,
+                                      cid=client.cid)
 
-            if tname in self.ietc.targets:
-                del self.ietc.targets[tname]
+                self.reload_sessions()
+                self.target_details.set_buffer(gtk.TextBuffer())
 
-            if tname in self.ietc.inactive_targets:
-                del self.ietc.inactive_targets[tname]
-
-            if tname in self.iet_deny.targets:
-                del self.iet_deny.targets[tname]
-
-            if tname in self.iet_allow.targets:
-                del self.iet_allow.targets[tname]
-
-            self.commit_files()
-            self.reload_sessions()
-            self.target_details.set_buffer(gtk.TextBuffer())
-
-        msg.destroy()
+            msg.destroy()
+ 
 
     def commit_files(self):
         try:
@@ -624,7 +663,11 @@ class IetView(object):
     def show_client_details(self, path):
         target = self.target_store[path[0:2]][0]
         initiator = self.target_store[path][1]
-        client = self.iets.sessions[target].clients[initiator]
+        ip = self.target_store[path][2]
+        sid = self.target_store[path][3]
+        cid = self.target_store[path][4]
+        key = ip + '/' + initiator + '/' + str(sid) + '/' + str(cid)
+        client = self.iets.sessions[target].clients[key]
         buf = gtk.TextBuffer()
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
         buf.create_tag('Heading', scale=pango.SCALE_X_LARGE,
@@ -765,26 +808,39 @@ class IetView(object):
 
     def cursor_changed(self, target_list):
         path, col = target_list.get_cursor()
+        edit_menu = self.wTree.get_widget('edit_menu_item')
+        delete_menu = self.wTree.get_widget('delete_menu_item')
         
         if path == None:
             return
-
+        
         if len(path) == 1:
+            # Clicked on Active Targets or Disabled targets
             self.delete_button.set_sensitive(False)
+            delete_menu.set_sensitive(False)
             self.edit_button.set_sensitive(False)
+            edit_menu.set_sensitive(False)
             self.target_details.set_buffer(gtk.TextBuffer())
         elif len(path) == 2:
+            # Clicked on target
             if path[0] == 0:
                 self.show_session_details(path)
             elif path[0] == 1:
                 self.show_config_details(path)
 
             self.delete_button.set_sensitive(True)
+            delete_menu.set_sensitive(True)
+            self.tooltips.set_tip(self.delete_button, 'Delete the selected target')
             self.edit_button.set_sensitive(True)
+            edit_menu.set_sensitive(True)
         else:
+            # Clicked on a client
             self.show_client_details(path)
-            self.delete_button.set_sensitive(False)
+            self.delete_button.set_sensitive(True)
+            self.tooltips.set_tip(self.delete_button, 'Delete the selected connection')
+            delete_menu.set_sensitive(True)
             self.edit_button.set_sensitive(False)
+            edit_menu.set_sensitive(False)
 
     def bold_cell(self, col, cell, model, iter):
         ''' Bolds Active and Disabled target row text '''
@@ -937,7 +993,7 @@ class IetView(object):
                     adm.delete_user(-1, uname)
                     adm.add_user(-1, uname, passwd)
 
-            for uname, passwd in self.ietc.users.iteritems():
+            for uname, passwd in self.ietc.users.items():
                 if uname not in newusers:
                     adm.delete_user(-1, uname)
                     del self.ietc.users[uname]

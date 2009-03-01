@@ -28,10 +28,10 @@ class IetInitiatorClient(object):
         self.sid = sid
         self.initiator = initiator
         self.cid = -1
-        self.ip = ""
-        self.state = ""
-        self.hd = ""
-        self.dd = ""
+        self.ip = ''
+        self.state = ''
+        self.hd = ''
+        self.dd = ''
 
     def set_cid(self, cid, ip, state, hd, dd):
         self.cid = cid
@@ -39,6 +39,10 @@ class IetInitiatorClient(object):
         self.state = state
         self.hd = hd
         self.dd = dd
+
+    def key(self):
+        return self.ip + '/' + self.initiator + '/' \
+               + str(self.sid) + '/' + str(self.cid)
 
 class IetSessions(object):
     TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
@@ -77,7 +81,7 @@ class IetSessions(object):
                                    m.group('state'), m.group('hd'),
                                    m.group('dd'))
         
-                session.clients[client.initiator] = client
+                session.clients[client.key()] = client
 
                 continue
                 
