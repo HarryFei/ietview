@@ -12,8 +12,6 @@
 
 - Data validation
 
-- After doing an add/edit option and the subsequent reload, re-hightlight the selected target and reload the text details (especially after a reload).  Select the new target after an add.  Expand category if necessary.
-
 - All options can probably be updates (no adds)
 
 - Fully support Lun configurations (e.g. nullio)

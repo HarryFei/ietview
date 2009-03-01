@@ -226,6 +226,12 @@ class IetView(object):
         self.reload_sessions()
 
     def reload_sessions(self):
+        path, col = self.target_list.get_cursor()
+        if path != None and len(path) in [2, 3]:
+            old_tname = self.target_store[path[0:2]][0]
+        else:
+            old_tname = None
+            
         self.target_store.clear()
 
         self.iets = iet_session.IetSessions(self.SESSION_PATH)
@@ -281,6 +287,14 @@ class IetView(object):
             self.target_store.append(disabled_targets, [ target.name, '',
                                                          '', '', ''])
 
+        #Re-highlight the previously selected target.
+        if old_tname:
+            for row in self.target_store:
+                for child_row in row.iterchildren():
+                    if old_tname == child_row[0]:
+                        self.target_list.expand_to_path(child_row.path)
+                        self.target_list.set_cursor(child_row.path)
+
         self.target_list.expand_row((0), False)
 
     def delete_target_menu(self, menuitem):
@@ -323,10 +337,6 @@ class IetView(object):
                     del self.iet_allow.targets[tname]
 
                 self.commit_files()
-                self.reload_sessions()
-                self.target_details.set_buffer(gtk.TextBuffer())
-
-            msg.destroy()
         elif len(path) == 3:
             tname = self.target_store[path[0:2]][0]
             initiator = self.target_store[path][1]
@@ -354,8 +364,9 @@ class IetView(object):
                 self.reload_sessions()
                 self.target_details.set_buffer(gtk.TextBuffer())
 
-            msg.destroy()
- 
+        msg.destroy()
+        self.target_details.set_buffer(gtk.TextBuffer())
+        self.reload_sessions()
 
     def commit_files(self):
         try:
