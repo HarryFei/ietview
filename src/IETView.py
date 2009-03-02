@@ -988,14 +988,21 @@ class IetView(object):
         options_menu.hide()
 
         if response == 1:
+            warning = 0
             active = isnsserver_check.get_active()
             key = 'iSNSServer'
             val = isnsserver_entry.get_text()
 
             if active:
+                if key not in self.ietc.options \
+                   or val != self.ietc.options[key]:
+
+                    warning = 1
+
                 self.ietc.options[key] = val
             elif key in self.ietc.options:
                 del self.ietc.options[key]
+                warning = 1
 
             active = isnsac_check.get_active()
             key = 'iSNSAccessControl'
@@ -1005,9 +1012,15 @@ class IetView(object):
                 val = 'No'
 
             if active:
+                if key not in self.ietc.options \
+                   or val != self.ietc.options[key]:
+
+                    warning = 1
+
                 self.ietc.options[key] = val
             elif key in self.ietc.options:
                 del self.ietc.options[key]
+                warning = 1
 
             active = outuser_check.get_active()
             key = 'OutgoingUser'
@@ -1044,6 +1057,17 @@ class IetView(object):
                     del self.ietc.users[uname]
 
             self.commit_files()
+
+            if warning:
+                msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
+                        type = gtk.MESSAGE_WARNING,
+                        buttons = gtk.BUTTONS_CLOSE,
+                        message_format = 'Changes related iSNS will ' \
+                                         'only take effect after ' \
+                                         'iscsi-target has been restarted.')
+
+                response = msg.run()
+                msg.destroy()
 
     def add_user(self, button):
         user_addedit = self.wTree.get_widget('user_addedit_dialog')

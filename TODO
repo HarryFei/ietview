@@ -1,7 +1,5 @@
 - Refactor out options and user dialogs for use in both target_addedit and global_options.
 
-- Add a dialog that asks if the user would like to restart iscsi-target (how to be platform independent? /etc/init.d/iscsi-target restart) when iSNSServer get added or modified
-
 - Add support for ietadm 0.4.17 (can get user info from ietadm)
 
 - If 0.4.17 is installed, then show the provisioned incoming users.
