@@ -17,6 +17,7 @@
 import os
 import sys
 import shutil
+import filecmp
 
 import pygtk
 import gtk
@@ -218,6 +219,18 @@ class IetView(object):
 
         self.tooltips = gtk.Tooltips()
 
+        # Check that we have root privledges
+        if os.geteuid() != 0:
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
+                    type = gtk.MESSAGE_WARNING,
+                    buttons = gtk.BUTTONS_CLOSE,
+                    message_format = 'IETView is not being run with ' \
+                                     'root privileges.  Functionality may be ' \
+                                     'reduced.')
+
+            response = msg.run()
+            msg.destroy()
+
         self.backup_files()
         self.reload_sessions()
 
@@ -300,20 +313,32 @@ class IetView(object):
         self.target_list.expand_row((0), False)
 
     def backup_files(self):
+        sfx = '.ietviewbk'
         paths = [self.CONF_FILE_PATH,
                  self.INITIATORS_DENY_PATH,
                  self.INITIATORS_ALLOW_PATH]
 
         changed_files = []
 
+        # Backup any files that haven't already been backed up
+        # Check that the file exists, and if the backup file doesn't
+        # exist or the original and backup are different, then
+        # check if the original starts with my signature.
+        # If not, then make a copy
         for path in paths:
-            if os.path.exists(path):
-                f = open(path, 'r')
-                if f.readline() != '# Written by IETView\n':
-                    changed_files.append(path)
-                    shutil.copyfile(path, path + '.ietviewbk')
+            if os.path.exists(path) \
+               and (not os.path.exists(path + sfx) 
+                    or not filecmp.cmp(path, path + sfx)):
 
-                f.close()
+                try:
+                    f = open(path, 'r')
+                    if f.readline() != '# Written by IETView\n':
+                        shutil.copyfile(path, path + '.ietviewbk')
+                        changed_files.append(path)
+
+                    f.close()
+                except IOError:
+                    pass
 
         if changed_files:
             msg_str = "The following file backups were made because it " \
