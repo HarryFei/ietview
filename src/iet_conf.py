@@ -113,7 +113,7 @@ class IetConfFile(object):
     def write(self):
         f = file(self.filename, 'w')
 
-        f.write('# Written by IETView.py\n')
+        f.write('# Written by IETView\n')
         f.write('# Global discovery options\n')
         for key, val in self.options.iteritems():
             if key != 'OutgoingUser':

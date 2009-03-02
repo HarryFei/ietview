@@ -65,6 +65,7 @@ class IetAllowDeny(object):
     def write(self):
         f = open(self.filename, 'w')
 
+        f.write('# Written by IETView\n')
         for target, hosts in self.targets.iteritems():
             f.write('%s %s\n' % (target, ', '.join(hosts)))
 

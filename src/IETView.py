@@ -16,6 +16,7 @@
 
 import os
 import sys
+import shutil
 
 import pygtk
 import gtk
@@ -217,6 +218,7 @@ class IetView(object):
 
         self.tooltips = gtk.Tooltips()
 
+        self.backup_files()
         self.reload_sessions()
 
     def run(self):
@@ -296,6 +298,38 @@ class IetView(object):
                         self.target_list.set_cursor(child_row.path)
 
         self.target_list.expand_row((0), False)
+
+    def backup_files(self):
+        paths = [self.CONF_FILE_PATH,
+                 self.INITIATORS_DENY_PATH,
+                 self.INITIATORS_ALLOW_PATH]
+
+        changed_files = []
+
+        for path in paths:
+            if os.path.exists(path):
+                f = open(path, 'r')
+                if f.readline() != '# Written by IETView\n':
+                    changed_files.append(path)
+                    shutil.copyfile(path, path + '.ietviewbk')
+
+                f.close()
+
+        if changed_files:
+            msg_str = "The following file backups were made because it " \
+                      "didn't look like the files were written " \
+                      "by this program:\n\n"
+
+            for path in changed_files:
+                msg_str = msg_str + path + ' ==> ' + path + '.ietviewbk\n'
+
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
+                     type = gtk.MESSAGE_INFO,
+                     buttons = gtk.BUTTONS_CLOSE,
+                     message_format = msg_str)     
+
+            response = msg.run()
+            msg.destroy()
 
     def delete_target_menu(self, menuitem):
         """ Delete Menu Item Clicked """
