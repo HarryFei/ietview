@@ -1,0 +1,104 @@
+IETView is a GUI that manages iSCSI Enterprise Target (IET) server software.
+With it you can, among other things,  view and edit existing target volumes,
+create new target volumes, and manage connected clients.
+
+If you downloaded this without knowing anything about IET or iSCSI, first
+check out the IET webpage (http://iscsitarget.sourceforge.net/) and
+wikipedia (en.wikipedia.org/wiki/ISCSI) for more information.
+
+Dependencies
+------------
+
+Before installation, note that you'll need the following installed:
+1) iSCSI Enterprise Target
+    Grab their latest release from their sourceforge site:
+        http://iscsitarget.sourceforge.net/
+
+    I've so far tested with 0.4.15, but it should be compatible with
+    releases 0.4.16 and 0.4.17.
+
+2) Python and PyGTK
+    IETView is a program written in Python (http://www.python.org), and built
+    upon PyGTK (http://www.pygtk.org).   The versions tested against are:
+        Python: 2.4.3
+        PyGTK: 2.10
+
+    The code should be compatible with versions later than this (excluding 
+    Python 3).
+
+
+Installation
+------------
+
+IETView is packaged with distutils (http://docs.python.org/distutils/), and
+can be installed with the following command:
+
+python setup.py install
+
+Then, running IETView is a simple as:
+ietview
+
+If you want to run without installation, just run the following command in 
+the same directory as this README.
+./ietview
+
+IETView will complain if it isn't run with root privledges.  That's because 
+it wants to write to certain IET files to update configuration (see next 
+section for more info).  To run as root, you can use either login as root, 
+use 'su' to become root, or use 'sudo', for example:
+sudo ietview
+
+if you installed, or the following if you didn't:
+
+sudo ./ietview
+
+
+File Access
+-----------
+
+IETView needs root access to make changes to IET.  The following files will be
+overwritten when any targets are added, edited, or deleted:
+/etc/ietd.conf
+/etc/initiators.allow
+/etc/initiators.deny
+
+Backups of these files will be made when the program is first run.
+
+Also, IETView depends on the 'iscsiadm' program to be in your PATH.  It should
+have been installed along with your iSCSI Enterprise Target software.
+
+
+Features
+--------
+
+- view, edit, and delete existing iSCSI volumes
+- create and delete iSCSI volumes
+- view and disconnect iSCSI clients (initiators)
+- manage global IET parameters (e.g., iSNS)
+- manage access controls to targets
+
+
+Contact
+-------
+
+Please send bug reports, comments, feature requests, etc. to me 
+at <jpanczyk@gmail.com>
+
+
+Source Code
+-----------
+
+Source repository is available on Gitorious.
+http://gitorious.org/projects/ietview
+
+To checkout the repository:
+git clone git://gitorious.org/ietview/mainline.git
+
+or, if you're behind a firewall:
+
+git clone http://git.gitorious.org/ietview/mainline.git
+
+
+Project homepage is on Google Code.  There you'll find release tarballs and an issues tracker.
+http://code.google.com/p/ietview/
+
