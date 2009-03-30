@@ -224,8 +224,8 @@ class IetView(object):
             msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
                     type = gtk.MESSAGE_WARNING,
                     buttons = gtk.BUTTONS_CLOSE,
-                    message_format = 'IETView is not being run with ' \
-                                     'root privileges.  Functionality may be ' \
+                    message_format = 'IETView is not being run with root ' \
+                                     'privileges.  Functionality may be ' \
                                      'reduced.')
 
             response = msg.run()
@@ -642,13 +642,13 @@ class IetView(object):
         
         buf.insert(buf.get_end_iter(), lun.path + '\n')
 
-        for option in ['State', 'SCSI ID', 'SCSI SN', 'IO Mode']:
+        for option in ['SCSI ID', 'SCSI SN', 'IO Mode', 'State']:
             key = option.replace(' ', '').lower()
 
             if key in lun.options:
                 buf.insert_with_tags_by_name(buf.get_end_iter(), 
                                             '\t%s: ' % option, 'Bold')
-                buf.insert(buf.get_end_iter(), lun.options[key] + '\n')
+                buf.insert(buf.get_end_iter(), str(lun.options[key]) + '\n')
 
     def show_session_details(self, path):
         target = self.target_store[path][0]
@@ -690,7 +690,23 @@ class IetView(object):
             else:
                 buf.insert(buf.get_end_iter(), '\n')
 
-            self.show_lun_details(lun, buf)
+            if target in self.ietc.targets \
+               and lun.number in self.ietc.targets[target].luns:
+                conf_lun = self.ietc.targets[target].luns[lun.number]
+                # Bit of a hack until I restructure things
+                options = {}
+                for key, val in conf_lun.options.iteritems():
+                    options[key] = val
+
+                for key, val in lun.options.iteritems():
+                    options[key] = val
+
+                old_options = lun.options
+                lun.options = options
+                self.show_lun_details(lun, buf)
+                lun.options = old_options
+            else:
+                self.show_lun_details(lun, buf)
 
         buf.insert(buf.get_end_iter(), '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny\n', 'Heading3')

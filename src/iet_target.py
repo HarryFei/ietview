@@ -25,19 +25,18 @@ class IetLun(object):
         self.path = path
         self.options = {}
 
-        for option in ['iomode', 'scsiid', 'scsisn']:
+        for option in ['state', 'iomode', 'scsiid', 'scsisn']:
             if option in kwargs:
                 self.options[option] = kwargs[option]
 
     def add_options(self, in_opts):
-        print in_opts
-
         if in_opts == None:
             return
 
         for m in re.finditer(self.OPTIONS_REGEX, in_opts):
-            if m.group('key').lower() in ['scsiid', 'scsisn', 'iomode'] \
-                    and m.group('val') != None:
+            if m.group('key').lower() in \
+               ['state', 'scsiid', 'scsisn', 'iomode'] \
+               and m.group('val') != None:
 
                 self.options[m.group('key').lower()] = m.group('val')
        
