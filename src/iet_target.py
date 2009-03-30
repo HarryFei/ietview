@@ -13,27 +13,43 @@
 # You should have received a copy of the GNU General Public License
 # along with IETView.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import ietadm
 
 class IetLun(object):
+    OPTIONS_REGEX=',?\s*(?P<key>\w+)\s*=\s*(?P<val>[^ \t\n\r\f\v,]+)'
+
     def __init__(self, number, path, iotype, **kwargs):
         self.number = number
         self.iotype = iotype
         self.path = path
+        self.options = {}
 
-        if 'iomode' in kwargs:
-            self.iomode = kwargs['iomode']
-        else:
-            self.iomode = ''
+        for option in ['iomode', 'scsiid', 'scsisn']:
+            if option in kwargs:
+                self.options[option] = kwargs[option]
 
-        if 'state' in kwargs:
-            self.state = kwargs['state']
-        else:
-            self.state = ''
-        
+    def add_options(self, in_opts):
+        print in_opts
+
+        if in_opts == None:
+            return
+
+        for m in re.finditer(self.OPTIONS_REGEX, in_opts):
+            if m.group('key').lower() in ['scsiid', 'scsisn', 'iomode'] \
+                    and m.group('val') != None:
+
+                self.options[m.group('key').lower()] = m.group('val')
+       
     def write(self, f, prepend=''):
-        f.write('%s\tLun %d Path=%s,Type=%s\n'
+        f.write('%s\tLun %d Path=%s,Type=%s'
                 % (prepend, self.number, self.path, self.iotype))
+
+        for option in ['ScsiId', 'ScsiSN', 'IOMode']:
+            if option.lower() in self.options:
+                f.write(',%s=%s'%(option, self.options[option.lower()]))
+
+        f.write('\n')
 
     def dump(self):
         print self.number, self.path, self.iotype

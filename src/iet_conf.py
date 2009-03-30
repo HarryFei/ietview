@@ -55,7 +55,7 @@ class IetConfTarget(object):
 class IetConfFile(object):
     TARGET_REGEX='Target\s+(?P<target>\S+)'
     CMNT_TARGET_REGEX='\s*#\s*Target\s+(?P<target>\S+)'
-    LUN_REGEX='Lun\s+(?P<lun>\d+)\s+Path=(?P<path>[^ \t\n\r\f\v,]+)\s*,\s*Type\s*=\s*(?P<iotype>\w+)'
+    LUN_REGEX='Lun\s+(?P<lun>\d+)\s+Path=(?P<path>[^ \t\n\r\f\v,]+)\s*,\s*Type\s*=\s*(?P<iotype>[^ \t\n\r\f\v,]+)(?P<options>\S+)?'
     OPTION_REGEX='[^a-zA-Z]*(?P<key>\S+)\s+(?P<value>\S+)'
     IN_USERPASS_REGEX='\s*IncomingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
     OUT_USERPASS_REGEX='\s*OutgoingUser\s+(?P<uname>\S+)\s+(?P<pass>\S+)'
@@ -179,6 +179,8 @@ class IetConfFile(object):
             if m:
                 new_lun = iet_target.IetLun(int(m.group('lun')),
                         m.group('path'), m.group('iotype'))
+
+                new_lun.add_options(m.group('options'))
         
                 current_target.luns[new_lun.number] = new_lun
         

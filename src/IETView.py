@@ -627,6 +627,29 @@ class IetView(object):
         self.commit_files()
         self.reload_sessions()
 
+    def show_lun_details(self, lun, buf):
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                        '\tLUN ID: ', 'Bold')
+
+        buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
+
+        buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                        '\tIO Type: ', 'Bold')
+
+        buf.insert(buf.get_end_iter(), lun.iotype + '\n')
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
+                                        '\tPath: ', 'Bold')
+        
+        buf.insert(buf.get_end_iter(), lun.path + '\n')
+
+        for option in ['State', 'SCSI ID', 'SCSI SN', 'IO Mode']:
+            key = option.replace(' ', '').lower()
+
+            if key in lun.options:
+                buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                                            '\t%s: ' % option, 'Bold')
+                buf.insert(buf.get_end_iter(), lun.options[key] + '\n')
+
     def show_session_details(self, path):
         target = self.target_store[path][0]
         tid = self.iets.sessions[target].tid
@@ -667,26 +690,7 @@ class IetView(object):
             else:
                 buf.insert(buf.get_end_iter(), '\n')
 
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                         '\tLUN ID: ', 'Bold')
-
-            buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(),
-                                         '\tPath: ', 'Bold')
-            
-            buf.insert(buf.get_end_iter(), lun.path + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(),
-                                         '\tState: ', 'Bold')
-
-            buf.insert(buf.get_end_iter(), str(lun.state) + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                         '\tIO Type: ', 'Bold')
-
-            buf.insert(buf.get_end_iter(), lun.iotype + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                         '\tIO Mode: ', 'Bold')
-
-            buf.insert(buf.get_end_iter(), lun.iomode + '\n')
+            self.show_lun_details(lun, buf)
 
         buf.insert(buf.get_end_iter(), '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny\n', 'Heading3')
@@ -826,18 +830,7 @@ class IetView(object):
             else:
                 buf.insert(buf.get_end_iter(), '\n')
 
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                         '\tLUN ID: ', 'Bold')
-
-            buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(),
-                                         '\tPath: ', 'Bold')
-            
-            buf.insert(buf.get_end_iter(), lun.path + '\n')
-            buf.insert_with_tags_by_name(buf.get_end_iter(), 
-                                         '\tIO Type: ', 'Bold')
-
-            buf.insert(buf.get_end_iter(), lun.iotype + '\n')
+            self.show_lun_details(lun, buf)
 
         buf.insert(buf.get_end_iter(), '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'Deny\n', 'Heading3')
