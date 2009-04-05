@@ -247,12 +247,12 @@ class IetConfFile(object):
                     local_target.options[key] = val
             elif type == 'lun':
                 if op == iet_target.IetTarget.ADD:
-                    local_target.add_lun(val.number, val.path, val.iotype)
+                    local_target.add_lun(val.number, val.path, val.iotype, **val.options)
                 elif op == iet_target.IetTarget.DELETE:
                     del local_target.luns[val.number]
                 elif op == iet_target.IetTarget.UPDATE:
                     del local_target.luns[val.number]
-                    local_target.add_lun(val.number, val.path, val.iotype)
+                    local_target.add_lun(val.number, val.path, val.iotype, **val.options)
             elif type == 'user':
                 uname, passwd = val.split('/')
 

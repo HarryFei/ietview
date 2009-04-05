@@ -65,9 +65,18 @@ class IetAdm(object):
 
         return 0
 
-    def add_lun(self, tid, lun, path, type):
+    def add_lun(self, tid, lun, path, type, scsiid='', scsisn='', iomode=''):
         cmnd = 'ietadm --op=new --tid=%d --lun=%d --params=Path=%s,Type=%s' \
                 % (tid, lun, path, type)
+
+        if scsiid:
+            cmnd = cmnd + ',ScsiId=%s' % scsiid
+
+        if scsisn:
+            cmnd = cmnd + ',ScsiSN=%s' % scsisn
+
+        if iomode:
+            cmnd = cmnd + ',IOMode=%s' % iomode
 
         process = subprocess.Popen(cmnd, stderr=subprocess.STDOUT,
                                    stdout=subprocess.PIPE, shell=True)
@@ -249,12 +258,12 @@ class IetAdm(object):
                     self.delete_option(target.tid, key, val)
             elif type == 'lun':
                 if op == iet_target.IetTarget.ADD:
-                    self.add_lun(target.tid, val.number, val.path, val.iotype)
+                    self.add_lun(target.tid, val.number, val.path, val.iotype, **val.options)
                 elif op == iet_target.IetTarget.DELETE:
                     self.delete_lun(target.tid, val.number)
                 elif op == iet_target.IetTarget.UPDATE:
                     self.delete_lun(target.tid, val.number)
-                    self.add_lun(target.tid, val.number, val.path, val.iotype)
+                    self.add_lun(target.tid, val.number, val.path, val.iotype, **val.options)
             elif type == 'user':
                 uname, passwd = val.split('/')
 

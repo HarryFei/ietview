@@ -153,7 +153,10 @@ class IetView(object):
                 'isnsac_toggle_toggled_cb' : self.toggle_isnsac_toggle,
                 'about_menu_item_activate_cb' : self.about,
                 'all_allow_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate,
-                'all_deny_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate
+                'all_deny_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate,
+                'scsiid_check_toggled_cb' : self.addedit_dialog.toggle_scsiid,
+                'scsisn_check_toggled_cb' : self.addedit_dialog.toggle_scsisn,
+                'iomode_check_toggled_cb' : self.addedit_dialog.toggle_iomode
               }
 
         self.wTree.signal_autoconnect (dic)
@@ -474,8 +477,9 @@ class IetView(object):
                 conf_target = self.ietc.inactive_targets[tname]
 
             idx = 0
-            for path, iotype in dialog.lun_store:
-                conf_target.add_lun(idx, path, iotype)
+            for path, iotype, sid, ssn, io in dialog.lun_store:
+                conf_target.add_lun(idx, path, iotype,
+                                    scsiid=sid, scsisn=ssn, iomode=io)
                 idx += 1
 
             for user, password in dialog.user_store:
@@ -495,8 +499,9 @@ class IetView(object):
                 adm.add_option(tid, key, value)
     
             idx = 0
-            for path, iotype in dialog.lun_store:
-                adm.add_lun(tid, lun=idx, path=path, type=iotype)
+            for path, iotype, sid, ssn, io in dialog.lun_store:
+                adm.add_lun(tid, lun=idx, path=path, type=iotype, scsiid=sid,
+                            scsisn=ssn, iomode=io)
                 idx += 1
     
             for user, password in dialog.user_store:

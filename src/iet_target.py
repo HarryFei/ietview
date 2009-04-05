@@ -26,7 +26,7 @@ class IetLun(object):
         self.options = {}
 
         for option in ['state', 'iomode', 'scsiid', 'scsisn']:
-            if option in kwargs:
+            if option in kwargs and kwargs[option]:
                 self.options[option] = kwargs[option]
 
     def add_options(self, in_opts):
@@ -39,7 +39,7 @@ class IetLun(object):
                and m.group('val') != None:
 
                 self.options[m.group('key').lower()] = m.group('val')
-       
+
     def write(self, f, prepend=''):
         f.write('%s\tLun %d Path=%s,Type=%s'
                 % (prepend, self.number, self.path, self.iotype))
@@ -54,7 +54,20 @@ class IetLun(object):
         print self.number, self.path, self.iotype
 
     def __eq__(self, other):
-        return  self.path == other.path and self.iotype == other.iotype
+        if self.path != other.path or self.iotype != other.iotype:
+            return False
+
+        for key, val in self.options.iteritems():
+            if key not in other.options:
+                return False
+            elif val != other.options[key]:
+                return False
+
+        for key in other.options:
+            if key not in self.options:
+                return False
+
+        return True
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -102,6 +115,13 @@ class IetTarget(object):
         else:
             self.users = {}
 
+        for lun in self.luns.itervalues():
+            if lun.number in kwargs['conf'].luns:
+                conf_lun = kwargs['conf'].luns[lun.number]
+                for option in ['scsiid', 'scsisn']:
+                    if option in conf_lun.options:
+                        lun.options[option] = conf_lun.options[option]
+
         self.options = {} 
         adm = ietadm.IetAdm()
         adm.show(self.options, kwargs['session'].tid, sid=0)
@@ -122,8 +142,8 @@ class IetTarget(object):
         self.name = dialog.tname.get_text()
         self.luns = {}
         i = 0
-        for path, iotype in dialog.lun_store:
-            self.luns[i] = IetLun(i, path, iotype)
+        for path, iotype, sid, ssn, mode in dialog.lun_store:
+            self.luns[i] = IetLun(i, path, iotype, scsiid=sid, scsisn=ssn, iomode=mode)
             i += 1
 
         self.allow = []

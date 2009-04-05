@@ -39,7 +39,7 @@ class TargetAddEdit(object):
     def __init__(self, widgets):
         self.wTree = widgets
         self.option_store = gtk.ListStore(str, str)
-        self.lun_store = gtk.ListStore(str, str)
+        self.lun_store = gtk.ListStore(str, str, str, str, str)
         self.user_store = gtk.ListStore(str, str)
         self.deny_store = gtk.ListStore(str)
         self.allow_store = gtk.ListStore(str)
@@ -64,6 +64,27 @@ class TargetAddEdit(object):
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 1)
+        lun_col.set_sort_column_id(-1)
+        self.lun_list.append_column(lun_col)
+
+        lun_col = gtk.TreeViewColumn('SCSI ID')
+        lun_cell = gtk.CellRendererText()
+        lun_col.pack_start(lun_cell, True)
+        lun_col.add_attribute(lun_cell, 'text', 2)
+        lun_col.set_sort_column_id(-1)
+        self.lun_list.append_column(lun_col)
+
+        lun_col = gtk.TreeViewColumn('SCSI SN')
+        lun_cell = gtk.CellRendererText()
+        lun_col.pack_start(lun_cell, True)
+        lun_col.add_attribute(lun_cell, 'text', 3)
+        lun_col.set_sort_column_id(-1)
+        self.lun_list.append_column(lun_col)
+
+        lun_col = gtk.TreeViewColumn('I/O Mode')
+        lun_cell = gtk.CellRendererText()
+        lun_col.pack_start(lun_cell, True)
+        lun_col.add_attribute(lun_cell, 'text', 4)
         lun_col.set_sort_column_id(-1)
         self.lun_list.append_column(lun_col)
 
@@ -213,7 +234,21 @@ class TargetAddEdit(object):
             
         self.lun_store.clear()
         for lun in luns.itervalues():
-            self.lun_store.append([lun.path, lun.iotype])
+            scsiid = ''
+            scsisn = ''
+            iomode = ''
+
+            if conf and lun.number in conf.luns:
+                if 'scsiid' in conf.luns[lun.number].options:
+                    scsiid = conf.luns[lun.number].options['scsiid']
+                
+                if 'scsisn' in conf.luns[lun.number].options:
+                    scsisn = conf.luns[lun.number].options['scsisn']
+    
+                if 'iomode' in conf.luns[lun.number].options:
+                    iomode = conf.luns[lun.number].options['iomode']
+    
+            self.lun_store.append([lun.path, lun.iotype, scsiid, scsisn, iomode])
 
         self.user_store.clear()
 
@@ -241,9 +276,26 @@ class TargetAddEdit(object):
         lun_path = self.wTree.get_widget('lun_path')
         lun_fileio = self.wTree.get_widget('lun_type_fileio')
         lun_blockio = self.wTree.get_widget('lun_type_blockio')
+        scsiid = self.wTree.get_widget('scsiid_entry')
+        scsisn = self.wTree.get_widget('scsisn_entry')
+        radio_ro = self.wTree.get_widget('iomode_ro')
+        radio_wt = self.wTree.get_widget('iomode_wt')
+        scsiid_check = self.wTree.get_widget('scsiid_check')
+        scsisn_check = self.wTree.get_widget('scsisn_check')
+        iomode_check = self.wTree.get_widget('iomode_check')
 
         lun_path.set_text('')
         lun_fileio.set_active(True)
+        scsiid.set_text('')
+        scsiid.set_sensitive(False)
+        scsisn.set_text('')
+        scsisn.set_sensitive(False)
+        radio_ro.set_active(True)
+        radio_ro.set_sensitive(False)
+        radio_wt.set_sensitive(False)
+        scsiid_check.set_active(False)
+        scsisn_check.set_active(False)
+        iomode_check.set_active(False)
 
         response = lun_addedit.run()
         lun_addedit.hide()
@@ -254,7 +306,26 @@ class TargetAddEdit(object):
             else:
                 type = 'blockio'
 
-            self.lun_store.append([ lun_path.get_text(), type ])
+            if scsiid_check.get_active():
+                scsiid_str = scsiid.get_text()
+            else:
+                scsiid_str = ''
+
+            if scsisn_check.get_active():
+                scsisn_str = scsisn.get_text()
+            else:
+                scsisn_str = ''
+
+            if iomode_check.get_active():
+                if radio_ro.get_active():
+                    iomode_str = 'ro'
+                else:
+                    iomode_str = 'wt'
+            else:
+                iomode_str = ''
+
+            self.lun_store.append([ lun_path.get_text(), type, scsiid_str,
+                                    scsisn_str, iomode_str ])
         
     def edit_lun_activate(self, treeview, path, col):
         return self.edit_lun(None)
@@ -269,12 +340,55 @@ class TargetAddEdit(object):
         lun_path = self.wTree.get_widget('lun_path')
         lun_fileio = self.wTree.get_widget('lun_type_fileio')
         lun_blockio = self.wTree.get_widget('lun_type_blockio')
+        scsiid = self.wTree.get_widget('scsiid_entry')
+        scsisn = self.wTree.get_widget('scsisn_entry')
+        radio_ro = self.wTree.get_widget('iomode_ro')
+        radio_wt = self.wTree.get_widget('iomode_wt')
+        scsiid_check = self.wTree.get_widget('scsiid_check')
+        scsisn_check = self.wTree.get_widget('scsisn_check')
+        iomode_check = self.wTree.get_widget('iomode_check')
 
-        lun_path.set_text(self.lun_store[path][0])
-        if self.lun_store[path][1] == 'fileio':
+        path_str, type_str, scsiid_str, scsisn_str, iomode_str = \
+                self.lun_store[path]
+
+        lun_path.set_text(path_str)
+        if type_str == 'fileio':
             lun_fileio.set_active(True)
         else:
             lun_blockio.set_active(True)
+
+        if scsiid_str:
+            scsiid.set_text(scsiid_str)
+            scsiid.set_sensitive(True)
+            scsiid_check.set_active(True)
+        else:
+            scsiid.set_text('')
+            scsiid.set_sensitive(False)
+            scsiid_check.set_active(False)
+
+        if scsisn_str:
+            scsisn.set_text(scsisn_str)
+            scsisn.set_sensitive(True)
+            scsisn_check.set_active(True)
+        else:
+            scsisn.set_text('')
+            scsisn.set_sensitive(False)
+            scsisn_check.set_active(False)
+
+        if iomode_str:
+            if iomode_str == 'ro':
+                radio_ro.set_active(True)
+            else:
+                radio_wt.set_active(True)
+
+            radio_ro.set_sensitive(True)
+            radio_wt.set_sensitive(True)
+            iomode_check.set_active(True)
+        else:
+            radio_ro.set_active(True)
+            radio_ro.set_sensitive(False)
+            radio_wt.set_sensitive(False)
+            iomode_check.set_active(False)
 
         response = lun_addedit.run()
         lun_addedit.hide()
@@ -285,9 +399,27 @@ class TargetAddEdit(object):
             else:
                 type = 'blockio'
 
-            self.lun_store[path] = [ lun_path.get_text(), type ]
- 
+            if scsiid_check.get_active():
+                scsiid_str = scsiid.get_text()
+            else:
+                scsiid_str = ''
 
+            if scsisn_check.get_active():
+                scsisn_str = scsisn.get_text()
+            else:
+                scsisn_str = ''
+
+            if iomode_check.get_active():
+                if radio_ro.get_active():
+                    iomode_str = 'ro'
+                else:
+                    iomode_str = 'wt'
+            else:
+                iomode_str = ''
+
+            self.lun_store[path] = [ lun_path.get_text(), type, scsiid_str,
+                                    scsisn_str, iomode_str ]
+ 
     def delete_lun(self, button):
         path, col = self.lun_list.get_cursor()
         if path == None:
@@ -308,6 +440,23 @@ class TargetAddEdit(object):
     def lun_dialog_ok(self, entry):
         lun_addedit = self.wTree.get_widget('lun_addedit_dialog')
         lun_addedit.response(1)
+
+    def toggle_scsiid(self, button):
+        entry = self.wTree.get_widget('scsiid_entry')
+
+        entry.set_sensitive(button.get_active())
+
+    def toggle_scsisn(self, button):
+        entry = self.wTree.get_widget('scsisn_entry')
+
+        entry.set_sensitive(button.get_active())
+
+    def toggle_iomode(self, button):
+        radio_ro = self.wTree.get_widget('iomode_ro')
+        radio_wt = self.wTree.get_widget('iomode_wt')
+
+        radio_ro.set_sensitive(button.get_active())
+        radio_wt.set_sensitive(button.get_active())
 
     def add_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
@@ -615,6 +764,5 @@ class TargetAddEdit(object):
             allowdeny_net.set_sensitive(False)
             allowdeny_mask.set_text('')
             allowdeny_mask.set_sensitive(False)
-
 
 
