@@ -279,7 +279,7 @@ class TargetAddEdit(object):
         scsiid = self.wTree.get_widget('scsiid_entry')
         scsisn = self.wTree.get_widget('scsisn_entry')
         radio_ro = self.wTree.get_widget('iomode_ro')
-        radio_wt = self.wTree.get_widget('iomode_wt')
+        radio_wb = self.wTree.get_widget('iomode_wb')
         scsiid_check = self.wTree.get_widget('scsiid_check')
         scsisn_check = self.wTree.get_widget('scsisn_check')
         iomode_check = self.wTree.get_widget('iomode_check')
@@ -292,7 +292,7 @@ class TargetAddEdit(object):
         scsisn.set_sensitive(False)
         radio_ro.set_active(True)
         radio_ro.set_sensitive(False)
-        radio_wt.set_sensitive(False)
+        radio_wb.set_sensitive(False)
         scsiid_check.set_active(False)
         scsisn_check.set_active(False)
         iomode_check.set_active(False)
@@ -320,7 +320,7 @@ class TargetAddEdit(object):
                 if radio_ro.get_active():
                     iomode_str = 'ro'
                 else:
-                    iomode_str = 'wt'
+                    iomode_str = 'wb'
             else:
                 iomode_str = ''
 
@@ -343,7 +343,7 @@ class TargetAddEdit(object):
         scsiid = self.wTree.get_widget('scsiid_entry')
         scsisn = self.wTree.get_widget('scsisn_entry')
         radio_ro = self.wTree.get_widget('iomode_ro')
-        radio_wt = self.wTree.get_widget('iomode_wt')
+        radio_wb = self.wTree.get_widget('iomode_wb')
         scsiid_check = self.wTree.get_widget('scsiid_check')
         scsisn_check = self.wTree.get_widget('scsisn_check')
         iomode_check = self.wTree.get_widget('iomode_check')
@@ -379,15 +379,15 @@ class TargetAddEdit(object):
             if iomode_str == 'ro':
                 radio_ro.set_active(True)
             else:
-                radio_wt.set_active(True)
+                radio_wb.set_active(True)
 
             radio_ro.set_sensitive(True)
-            radio_wt.set_sensitive(True)
+            radio_wb.set_sensitive(True)
             iomode_check.set_active(True)
         else:
             radio_ro.set_active(True)
             radio_ro.set_sensitive(False)
-            radio_wt.set_sensitive(False)
+            radio_wb.set_sensitive(False)
             iomode_check.set_active(False)
 
         response = lun_addedit.run()
@@ -413,7 +413,7 @@ class TargetAddEdit(object):
                 if radio_ro.get_active():
                     iomode_str = 'ro'
                 else:
-                    iomode_str = 'wt'
+                    iomode_str = 'wb'
             else:
                 iomode_str = ''
 
@@ -453,10 +453,10 @@ class TargetAddEdit(object):
 
     def toggle_iomode(self, button):
         radio_ro = self.wTree.get_widget('iomode_ro')
-        radio_wt = self.wTree.get_widget('iomode_wt')
+        radio_wb = self.wTree.get_widget('iomode_wb')
 
         radio_ro.set_sensitive(button.get_active())
-        radio_wt.set_sensitive(button.get_active())
+        radio_wb.set_sensitive(button.get_active())
 
     def add_option(self, button):
         option_addedit = self.wTree.get_widget('option_addedit_dialog')
