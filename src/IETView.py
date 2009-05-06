@@ -980,14 +980,17 @@ class IetView(object):
             for row in self.allow_store:
                 allow_hosts.append(row[0])
 
-            self.iet_allow.targets['ALL'] = allow_hosts
+            if len(allow_hosts) > 0:
+                self.iet_allow.targets['ALL'] = allow_hosts
 
             deny_hosts = []
 
             for row in self.deny_store:
                 deny_hosts.append(row[0])
 
-            self.iet_deny.targets['ALL'] = deny_hosts
+            if len(deny_hosts) > 0:
+                self.iet_deny.targets['ALL'] = deny_hosts
+
             self.commit_files()
 
     def options_menu(self, menuitem):
