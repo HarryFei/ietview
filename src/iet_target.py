@@ -112,15 +112,16 @@ class IetTarget(object):
         # TODO: Can be reteived via ietadm with version 0.4.17
         if 'conf' in kwargs and kwargs['conf'] != None:
             self.users = kwargs['conf'].users
+
+            for lun in self.luns.itervalues():
+                if lun.number in kwargs['conf'].luns:
+                    conf_lun = kwargs['conf'].luns[lun.number]
+                    for option in ['scsiid', 'scsisn']:
+                        if option in conf_lun.options:
+                            lun.options[option] = conf_lun.options[option]
+
         else:
             self.users = {}
-
-        for lun in self.luns.itervalues():
-            if lun.number in kwargs['conf'].luns:
-                conf_lun = kwargs['conf'].luns[lun.number]
-                for option in ['scsiid', 'scsisn']:
-                    if option in conf_lun.options:
-                        lun.options[option] = conf_lun.options[option]
 
         self.options = {} 
         adm = ietadm.IetAdm()

@@ -619,14 +619,20 @@ class IetView(object):
             self.ietc.update(old, diff)
 
         for op, type, val in diff:
+            if type == 'active' and val == False:
+                active = false
+            elif type == 'saved' and val == False:
+                saved = false
+
+        for op, type, val in diff:
             if type == 'active' and val == True:
                 tid = self.get_next_tid()
-                self.add_target_from_dialog(tid, True, False,
+                self.add_target_from_dialog(tid, True, saved,
                                             self.addedit_dialog)
 
                 self.ietc.activate_target(old)
             elif type == 'saved' and val == True:
-                self.add_target_from_dialog(old.tid, False, True,
+                self.add_target_from_dialog(old.tid, active, True,
                                             self.addedit_dialog)
 
         self.commit_files()
