@@ -359,6 +359,67 @@ class IetView(object):
             response = msg.run()
             msg.destroy()
 
+    def disconnect_clients(self, iter):
+        if self.target_store.iter_has_child(iter):
+            msg_str = "Target has active clients.  Disconnect " \
+                      "clients and deactivate it? 'No' abandons edits."
+
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                    type = gtk.MESSAGE_QUESTION,
+                                    buttons = gtk.BUTTONS_YES_NO,
+                                    message_format = msg_str)
+
+            response = msg.run()
+            msg.destroy()
+
+            if response == gtk.RESPONSE_NO:
+                return 1
+ 
+        iter = self.target_store.iter_children(iter)
+
+        while iter != None:
+            self.disconnect_client(iter, force=True)
+            iter = self.target_store.iter_next(iter)
+
+        return 0
+
+    def disconnect_client(self, iter, force=False):
+        tname = self.target_store[self.target_store.iter_parent(iter)][0]
+        initiator = self.target_store[iter][1]
+        ip = self.target_store[iter][2]
+        sid = self.target_store[iter][3]
+        cid = self.target_store[iter][4]
+        key = ip + '/' + initiator + '/' + str(sid) + '/' + str(cid)
+
+        client = self.iets.sessions[tname].clients[key]
+
+        if force:
+            adm = ietadm.IetAdm()
+            adm.delete_connection(tid=self.iets.sessions[tname].tid,
+                                    sid=client.sid,
+                                    cid=client.cid)
+            return
+
+        msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                type = gtk.MESSAGE_QUESTION,
+                                buttons = gtk.BUTTONS_YES_NO,
+                                message_format = 'Kill this client?\n%s' \
+                                                    % client.initiator)
+
+        response = msg.run()
+
+        if response == gtk.RESPONSE_YES:
+            adm = ietadm.IetAdm()
+            adm.delete_connection(tid=self.iets.sessions[tname].tid,
+                                    sid=client.sid,
+                                    cid=client.cid)
+
+            self.reload_sessions()
+            self.target_details.set_buffer(gtk.TextBuffer())
+
+        msg.destroy()
+
+
     def delete_target_menu(self, menuitem):
         """ Delete Menu Item Clicked """
         self.delete_target(None)
@@ -371,17 +432,30 @@ class IetView(object):
         if len(path) == 2:
             #delete a target
             tname = self.target_store[path][0]
+            iter = self.target_store.get_iter(path)
+
+            if self.target_store.iter_has_child(iter):
+                msg_str = '%s has active clients.  Disconnect ' \
+                          'clients and permanently delete it?' % tname
+            else:
+                msg_str = 'Permanently delete %s?' % tname
+                        
 
             msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
                                     type = gtk.MESSAGE_QUESTION,
                                     buttons = gtk.BUTTONS_YES_NO,
-                                    message_format = 'Permanently delete ' \
-                                                     'this target?\n%s' \
-                                                     % tname)
+                                    message_format = msg_str)
 
             response = msg.run()
 
             if response == gtk.RESPONSE_YES:
+                if self.target_store.iter_has_child(iter):
+                    iter = self.target_store.iter_children(iter)
+
+                    while iter != None:
+                        self.disconnect_client(iter, force=True)
+                        iter = self.target_store.iter_next(iter)
+
                 if path[0] == 0:
                     adm = ietadm.IetAdm()
                     adm.delete_target(self.iets.sessions[tname].tid)
@@ -399,34 +473,13 @@ class IetView(object):
                     del self.iet_allow.targets[tname]
 
                 self.commit_files()
+
+            msg.destroy()
+
         elif len(path) == 3:
-            tname = self.target_store[path[0:2]][0]
-            initiator = self.target_store[path][1]
-            ip = self.target_store[path][2]
-            sid = self.target_store[path][3]
-            cid = self.target_store[path][4]
-            key = ip + '/' + initiator + '/' + str(sid) + '/' + str(cid)
-            client = self.iets.sessions[tname].clients[key]
-    
+            iter = self.target_store.get_iter(path)
+            self.disconnect_client(iter)
 
-            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
-                                    type = gtk.MESSAGE_QUESTION,
-                                    buttons = gtk.BUTTONS_YES_NO,
-                                    message_format = 'Kill this client?\n%s' \
-                                                     % client.initiator)
-
-            response = msg.run()
-
-            if response == gtk.RESPONSE_YES:
-                adm = ietadm.IetAdm()
-                adm.delete_connection(tid=self.iets.sessions[tname].tid,
-                                      sid=client.sid,
-                                      cid=client.cid)
-
-                self.reload_sessions()
-                self.target_details.set_buffer(gtk.TextBuffer())
-
-        msg.destroy()
         self.target_details.set_buffer(gtk.TextBuffer())
         self.reload_sessions()
 
@@ -601,11 +654,17 @@ class IetView(object):
 
         for op, type, val in diff:
             if type == 'active' and val == False:
+                iter = self.target_store.get_iter(path)
+                if self.disconnect_clients(iter):
+                    return
+
                 adm.delete_target(old.tid)
                 self.ietc.disable_target(old)
                 active = False
                 old.active = False
-            elif type == 'saved' and val == False:
+
+        for op, type, val in diff:
+            if type == 'saved' and val == False:
                 self.ietc.delete_target(old.name, old.active)
                 saved = False
 
@@ -617,12 +676,6 @@ class IetView(object):
 
         if saved:
             self.ietc.update(old, diff)
-
-        for op, type, val in diff:
-            if type == 'active' and val == False:
-                active = false
-            elif type == 'saved' and val == False:
-                saved = false
 
         for op, type, val in diff:
             if type == 'active' and val == True:
