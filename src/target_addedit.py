@@ -39,7 +39,7 @@ class TargetAddEdit(object):
     def __init__(self, widgets):
         self.wTree = widgets
         self.option_store = gtk.ListStore(str, str)
-        self.lun_store = gtk.ListStore(str, str, str, str, str)
+        self.lun_store = gtk.ListStore(str, str, str, str, str, str)
         self.user_store = gtk.ListStore(str, str)
         self.deny_store = gtk.ListStore(str)
         self.allow_store = gtk.ListStore(str)
@@ -53,38 +53,45 @@ class TargetAddEdit(object):
         # Set up LUN Table
         self.lun_list = self.wTree.get_widget('lun_list')
         self.lun_list.set_model(self.lun_store)
-        lun_col = gtk.TreeViewColumn('Path')
+        lun_col = gtk.TreeViewColumn('ID')
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 0)
         lun_col.set_sort_column_id(-1)
         self.lun_list.append_column(lun_col)
 
-        lun_col = gtk.TreeViewColumn('Type')
+        lun_col = gtk.TreeViewColumn('Path')
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 1)
         lun_col.set_sort_column_id(-1)
         self.lun_list.append_column(lun_col)
 
-        lun_col = gtk.TreeViewColumn('SCSI ID')
+        lun_col = gtk.TreeViewColumn('Type')
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 2)
         lun_col.set_sort_column_id(-1)
         self.lun_list.append_column(lun_col)
 
-        lun_col = gtk.TreeViewColumn('SCSI SN')
+        lun_col = gtk.TreeViewColumn('SCSI ID')
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 3)
         lun_col.set_sort_column_id(-1)
         self.lun_list.append_column(lun_col)
 
-        lun_col = gtk.TreeViewColumn('I/O Mode')
+        lun_col = gtk.TreeViewColumn('SCSI SN')
         lun_cell = gtk.CellRendererText()
         lun_col.pack_start(lun_cell, True)
         lun_col.add_attribute(lun_cell, 'text', 4)
+        lun_col.set_sort_column_id(-1)
+        self.lun_list.append_column(lun_col)
+
+        lun_col = gtk.TreeViewColumn('I/O Mode')
+        lun_cell = gtk.CellRendererText()
+        lun_col.pack_start(lun_cell, True)
+        lun_col.add_attribute(lun_cell, 'text', 5)
         lun_col.set_sort_column_id(-1)
         self.lun_list.append_column(lun_col)
 
@@ -248,7 +255,8 @@ class TargetAddEdit(object):
                 if 'iomode' in conf.luns[lun.number].options:
                     iomode = conf.luns[lun.number].options['iomode']
     
-            self.lun_store.append([lun.path, lun.iotype, scsiid, scsisn, iomode])
+            self.lun_store.append([lun.number, lun.path, lun.iotype,
+                                   scsiid, scsisn, iomode])
 
         self.user_store.clear()
 
@@ -271,8 +279,23 @@ class TargetAddEdit(object):
         self.tname.set_sensitive(True)
         return response
 
+    def get_next_lun_id(self):
+        ids = []
+
+        for id, path, iotype, sid, ssn, mode in self.lun_store:
+            ids.append(int(id))
+
+        ids.sort()
+
+        for i in xrange(2**14):
+            if i not in ids:
+                return i
+
+        return 0
+
     def add_lun(self, button):
         lun_addedit = self.wTree.get_widget('lun_addedit_dialog')
+        lun_id = self.wTree.get_widget('lun_id')
         lun_path = self.wTree.get_widget('lun_path')
         lun_fileio = self.wTree.get_widget('lun_type_fileio')
         lun_blockio = self.wTree.get_widget('lun_type_blockio')
@@ -284,7 +307,9 @@ class TargetAddEdit(object):
         scsisn_check = self.wTree.get_widget('scsisn_check')
         iomode_check = self.wTree.get_widget('iomode_check')
 
+        lun_id.set_value(float(self.get_next_lun_id()))
         lun_path.set_text('')
+        lun_path.grab_focus()
         lun_fileio.set_active(True)
         scsiid.set_text('')
         scsiid.set_sensitive(False)
@@ -324,8 +349,9 @@ class TargetAddEdit(object):
             else:
                 iomode_str = ''
 
-            self.lun_store.append([ lun_path.get_text(), type, scsiid_str,
-                                    scsisn_str, iomode_str ])
+            self.lun_store.append([ str(lun_id.get_value_as_int()), 
+                                    lun_path.get_text(),
+                                    type, scsiid_str, scsisn_str, iomode_str ])
         
     def edit_lun_activate(self, treeview, path, col):
         return self.edit_lun(None)
@@ -337,6 +363,7 @@ class TargetAddEdit(object):
         path = path[0]
 
         lun_addedit = self.wTree.get_widget('lun_addedit_dialog')
+        lun_id = self.wTree.get_widget('lun_id')
         lun_path = self.wTree.get_widget('lun_path')
         lun_fileio = self.wTree.get_widget('lun_type_fileio')
         lun_blockio = self.wTree.get_widget('lun_type_blockio')
@@ -348,8 +375,10 @@ class TargetAddEdit(object):
         scsisn_check = self.wTree.get_widget('scsisn_check')
         iomode_check = self.wTree.get_widget('iomode_check')
 
-        path_str, type_str, scsiid_str, scsisn_str, iomode_str = \
+        id_str, path_str, type_str, scsiid_str, scsisn_str, iomode_str = \
                 self.lun_store[path]
+
+        lun_id.set_value(float(id_str))
 
         lun_path.set_text(path_str)
         if type_str == 'fileio':
@@ -417,8 +446,9 @@ class TargetAddEdit(object):
             else:
                 iomode_str = ''
 
-            self.lun_store[path] = [ lun_path.get_text(), type, scsiid_str,
-                                    scsisn_str, iomode_str ]
+            self.lun_store[path] = [ str(lun_id.get_value_as_int()), 
+                                     lun_path.get_text(), 
+                                     type, scsiid_str, scsisn_str, iomode_str ]
  
     def delete_lun(self, button):
         path, col = self.lun_list.get_cursor()

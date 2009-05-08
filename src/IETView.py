@@ -529,11 +529,9 @@ class IetView(object):
             else:
                 conf_target = self.ietc.inactive_targets[tname]
 
-            idx = 0
-            for path, iotype, sid, ssn, io in dialog.lun_store:
-                conf_target.add_lun(idx, path, iotype,
+            for id, path, iotype, sid, ssn, io in dialog.lun_store:
+                conf_target.add_lun(int(id), path, iotype,
                                     scsiid=sid, scsisn=ssn, iomode=io)
-                idx += 1
 
             for user, password in dialog.user_store:
                 conf_target.add_user(user, password)
@@ -551,11 +549,9 @@ class IetView(object):
             for key, value in dialog.option_store:
                 adm.add_option(tid, key, value)
     
-            idx = 0
-            for path, iotype, sid, ssn, io in dialog.lun_store:
-                adm.add_lun(tid, lun=idx, path=path, type=iotype, scsiid=sid,
-                            scsisn=ssn, iomode=io)
-                idx += 1
+            for id, path, iotype, sid, ssn, io in dialog.lun_store:
+                adm.add_lun(tid, lun=int(id), path=path, type=iotype,
+                            scsiid=sid, scsisn=ssn, iomode=io)
     
             for user, password in dialog.user_store:
                 adm.add_user(tid, user, password)

@@ -157,10 +157,10 @@ class IetTarget(object):
         self.saved = dialog.saved.get_active()
         self.name = dialog.tname.get_text()
         self.luns = {}
-        i = 0
-        for path, iotype, sid, ssn, mode in dialog.lun_store:
-            self.luns[i] = IetLun(i, path, iotype, scsiid=sid, scsisn=ssn, iomode=mode)
-            i += 1
+
+        for id, path, iotype, sid, ssn, mode in dialog.lun_store:
+            self.luns[int(id)] = IetLun(int(id), path, iotype, scsiid=sid,
+                                        scsisn=ssn, iomode=mode)
 
         self.allow = []
         for row in dialog.allow_store:
