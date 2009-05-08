@@ -57,13 +57,28 @@ class IetLun(object):
         if self.path != other.path or self.iotype != other.iotype:
             return False
 
+        # Hacks to work around that active targets have an implicit iomode
+        if 'iomode' in self.options:
+            if self.options['iomode'] != 'wt' \
+               and ('iomode' not in other.options 
+                    or self.options['iomode'] != other.options['iomode']):
+
+                return False
+
+        if 'iomode' in other.options and other.options['iomode'] != 'wt':
+            return False
+
         for key, val in self.options.iteritems():
+            if key == 'iomode':
+                continue
             if key not in other.options:
                 return False
             elif val != other.options[key]:
                 return False
 
         for key in other.options:
+            if key == 'iomode':
+                continue
             if key not in self.options:
                 return False
 

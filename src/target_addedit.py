@@ -375,7 +375,7 @@ class TargetAddEdit(object):
             scsisn.set_sensitive(False)
             scsisn_check.set_active(False)
 
-        if iomode_str:
+        if iomode_str and iomode_str != 'wt':
             if iomode_str == 'ro':
                 radio_ro.set_active(True)
             else:
