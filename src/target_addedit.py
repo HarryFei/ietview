@@ -208,6 +208,27 @@ class TargetAddEdit(object):
 
         response = self.dialog.run()
 
+        while response == 1 and len(self.tname.get_text()) == 0:
+            msg_str = 'You need to specify a name for this target. ' + \
+                      'Return to target dialog? ' + \
+                      '(No cancels and discards changes)'
+
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                    type = gtk.MESSAGE_QUESTION,
+                                    buttons = gtk.BUTTONS_YES_NO,
+                                    message_format = msg_str)
+
+            dresp = msg.run()
+
+            msg.destroy()
+
+            if dresp == gtk.RESPONSE_YES:
+                notebook.set_current_page(0)
+                self.tname.grab_focus()
+                response = self.dialog.run()
+            else:
+                response = 0
+
         self.dialog.hide()
 
         return response
@@ -273,6 +294,27 @@ class TargetAddEdit(object):
             self.allow_store.append([host.strip()])
 
         response = self.dialog.run()
+
+        while response == 1 and len(self.tname.get_text()) == 0:
+            msg_str = 'You need to specify a name for this target. ' + \
+                      'Return to target dialog? ' + \
+                      '(No cancels and discards changes)'
+
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
+                                    type = gtk.MESSAGE_QUESTION,
+                                    buttons = gtk.BUTTONS_YES_NO,
+                                    message_format = msg_str)
+
+            dresp = msg.run()
+
+            msg.destroy()
+
+            if dresp == gtk.RESPONSE_YES:
+                notebook.set_current_page(0)
+                self.tname.grab_focus()
+                response = self.dialog.run()
+            else:
+                response = 0
 
         self.dialog.hide()
 
