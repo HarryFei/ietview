@@ -16,7 +16,7 @@
 
 from distutils.core import setup
 setup(name='IETView',
-      version='1.0b2',
+      version='1.0b3',
       description='GUI tool that manages iSCSI Enterprise Target software',
       long_description='GUI tool that manages iSCSI Enterprise Target software.  It enables you to add, edit, and delete iSCSI targets on your server.',
       author='Jeffrey Panczyk',
