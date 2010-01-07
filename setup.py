@@ -1,5 +1,5 @@
 # This file is part of IETView
-# Copyright (C) 2008,2009 Jeffrey Panczyk <jpanczyk@gmail.com>
+# Copyright (C) 2008,2009,2010 Jeffrey Panczyk <jpanczyk@gmail.com>
 #
 # IETView is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 
 from distutils.core import setup
 setup(name='IETView',
-      version='1.0b3',
+      version='1.0',
       description='GUI tool that manages iSCSI Enterprise Target software',
       long_description='GUI tool that manages iSCSI Enterprise Target software.  It enables you to add, edit, and delete iSCSI targets on your server.',
       author='Jeffrey Panczyk',
