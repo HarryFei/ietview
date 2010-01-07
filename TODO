@@ -1,3 +1,12 @@
+- Make target list sortable by name.
+
+- Add the ability to add comments.
+Target blah blah blah
+# comment
+# comment
+Lun blah
+# not a comment
+
 - Refactor out options and user dialogs for use in both target_addedit and global_options.
 
 - Add support for ietadm 0.4.17 (can get user info from ietadm)

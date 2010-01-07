@@ -75,9 +75,11 @@ class IetView(object):
         self.tvcolumn.pack_start(self.cell, True)
         self.tvcolumn.add_attribute(self.cell, 'text', 0)
         self.target_list.set_search_column(0)
-        self.tvcolumn.set_sort_column_id(-1)
         self.tvcolumn.set_cell_data_func(self.cell, self.bold_cell)
+        self.tvcolumn.set_sort_column_id(0)
+        self.target_store.set_sort_func(0, self.sort_targets, None)
         self.target_list.set_reorderable(False)
+        self.target_store.set_sort_column_id(0, gtk.SORT_ASCENDING)
 
         self.target_details = self.wTree.get_widget('session_view')
         margin = 20
@@ -990,6 +992,13 @@ class IetView(object):
         else:
             cell.set_property('weight', pango.WEIGHT_NORMAL)
             cell.set_property('scale', pango.SCALE_MEDIUM)
+
+    def sort_targets(self, model, iter1, iter2, data):
+        path = model.get_path(iter1)
+        if path and len(path) == 1:
+            return 0
+        else:
+            return cmp(self.target_store[iter1][0], self.target_store[iter2][0])
 
     def toggle_isnsserver(self, button):
         entry = self.wTree.get_widget('isnsserver_entry')
