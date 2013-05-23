@@ -32,13 +32,34 @@ import iet_conf
 import ietadm
 import target_addedit
 
+from jinja2 import Template
+
+def get_conf_file_path():
+    if os.path.exists('/etc/ietd.conf'):
+        return '/etc/ietd.conf'
+    else:
+        return '/etc/iet/ietd.conf'
+
+def get_initiators_allow_path():
+    if os.path.exists('/etc/initiators.allow'):
+        return '/etc/initiators.allow'
+    else:
+        return '/etc/iet/initiators.allow'
+
+def get_initiators_deny_path():
+    if os.path.exists('/etc/initiators.deny'):
+        return '/etc/initiators.deny'
+    else:
+        return '/etc/iet/initiators.deny'
+
 class IetView(object):
-    CONF_FILE_PATH = '/etc/ietd.conf'
-    INITIATORS_ALLOW_PATH = '/etc/initiators.allow'
-    INITIATORS_DENY_PATH = '/etc/initiators.deny'
+    CONF_FILE_PATH = get_conf_file_path()
+    INITIATORS_ALLOW_PATH = get_initiators_allow_path()
+    INITIATORS_DENY_PATH = get_initiators_deny_path()
     SESSION_PATH = '/proc/net/iet/session'
     VOLUME_PATH = '/proc/net/iet/volume'
     GLADE_FILE_PATH = '/usr/share/IETView/IETView.glade'
+    DUP_TEXT_PATH = '/usr/share/IETView/dup_path.jinja'
 
     def __init__(self):
         if os.path.exists('src/IETView.glade'):
@@ -47,6 +68,16 @@ class IetView(object):
             self.gladefile = self.GLADE_FILE_PATH
         else:
             print 'Could not find critial resource file IETView.glade.\n' \
+                  'Is IETView installed correctly?'
+
+            sys.exit(1)
+
+        if os.path.exists('src/dup_path.jinja'):
+            self.dup_path= 'src/dup_path.jinja'
+        elif os.path.exists(self.DUP_TEXT_PATH):
+            self.dup_path= self.DUP_TEXT_PATH
+        else:
+            print 'Could not find critial resource file dup_path.jinja.\n' \
                   'Is IETView installed correctly?'
 
             sys.exit(1)
@@ -60,11 +91,11 @@ class IetView(object):
         accel_group = gtk.AccelGroup()
         self.main_window.add_accel_group(accel_group)
         refresh = self.wTree.get_widget('refresh_menu_item')
-        refresh.add_accelerator('activate', accel_group, 
+        refresh.add_accelerator('activate', accel_group,
                 gtk.gdk.keyval_from_name('F5'),
                 0, gtk.ACCEL_VISIBLE)
 
-        
+
         self.target_store = gtk.TreeStore(str, str, str, str, str)
 
         self.target_list = self.wTree.get_widget('session_tree')
@@ -158,7 +189,8 @@ class IetView(object):
                 'all_deny_list_row_activated_cb' : self.addedit_dialog.edit_allowdeny_activate,
                 'scsiid_check_toggled_cb' : self.addedit_dialog.toggle_scsiid,
                 'scsisn_check_toggled_cb' : self.addedit_dialog.toggle_scsisn,
-                'iomode_check_toggled_cb' : self.addedit_dialog.toggle_iomode
+                'iomode_check_toggled_cb' : self.addedit_dialog.toggle_iomode,
+                'analyze_path_cb' : self.analyze_path
               }
 
         self.wTree.signal_autoconnect (dic)
@@ -251,11 +283,11 @@ class IetView(object):
             old_tname = self.target_store[path[0:2]][0]
         else:
             old_tname = None
-            
+
         self.target_store.clear()
 
         self.iets = iet_session.IetSessions(self.SESSION_PATH)
-        self.ietv = iet_volume.IetVolumes(self.VOLUME_PATH) 
+        self.ietv = iet_volume.IetVolumes(self.VOLUME_PATH)
 
         try:
             self.iets.parse_file()
@@ -268,7 +300,7 @@ class IetView(object):
             msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
                      type = gtk.MESSAGE_ERROR,
                      buttons = gtk.BUTTONS_CLOSE,
-                     message_format = msg_str)     
+                     message_format = msg_str)
 
             msg.run()
             msg.destroy()
@@ -287,7 +319,7 @@ class IetView(object):
         active_targets = self.target_store.append(None,
                                                   ['Active Targets', '',
                                                    '', '', ''])
-        
+
         for session in self.iets.sessions.itervalues():
             piter = self.target_store.append(active_targets,
                                              [ session.target, '',
@@ -332,7 +364,7 @@ class IetView(object):
         # If not, then make a copy
         for path in paths:
             if os.path.exists(path) \
-               and (not os.path.exists(path + sfx) 
+               and (not os.path.exists(path + sfx)
                     or not filecmp.cmp(path, path + sfx)):
 
                 try:
@@ -356,7 +388,7 @@ class IetView(object):
             msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
                      type = gtk.MESSAGE_INFO,
                      buttons = gtk.BUTTONS_CLOSE,
-                     message_format = msg_str)     
+                     message_format = msg_str)
 
             response = msg.run()
             msg.destroy()
@@ -376,7 +408,7 @@ class IetView(object):
 
             if response == gtk.RESPONSE_NO:
                 return 1
- 
+
         iter = self.target_store.iter_children(iter)
 
         while iter != None:
@@ -441,7 +473,7 @@ class IetView(object):
                           'clients and permanently delete it?' % tname
             else:
                 msg_str = 'Permanently delete %s?' % tname
-                        
+
 
             msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
                                     type = gtk.MESSAGE_QUESTION,
@@ -498,7 +530,7 @@ class IetView(object):
             msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
                      type = gtk.MESSAGE_ERROR,
                      buttons = gtk.BUTTONS_CLOSE,
-                     message_format = msg_str)     
+                     message_format = msg_str)
 
             response = msg.run()
             msg.destroy()
@@ -519,7 +551,7 @@ class IetView(object):
             next_tid += 1
 
         return next_tid
- 
+
     def add_target_from_dialog(self, tid, active, saved, dialog):
         tname = dialog.tname.get_text()
 
@@ -540,34 +572,34 @@ class IetView(object):
 
             for host in dialog.deny_store:
                 self.iet_deny.add_host(tname, host[0])
-    
+
             for host in dialog.allow_store:
                 self.iet_allow.add_host(tname, host[0])
-    
+
         if active:
             adm = ietadm.IetAdm()
             adm.add_target(tid, tname)
-    
+
             for key, value in dialog.option_store:
                 adm.add_option(tid, key, value)
-    
+
             for id, path, iotype, sid, ssn, io in dialog.lun_store:
                 adm.add_lun(tid, lun=int(id), path=path, type=iotype,
                             scsiid=sid, scsisn=ssn, iomode=io)
-    
+
             for user, password in dialog.user_store:
                 adm.add_user(tid, user, password)
-    
+
             for host in dialog.deny_store:
                 self.iet_deny.add_host(tname, host[0])
-    
+
             for host in dialog.allow_store:
                 self.iet_allow.add_host(tname, host[0])
 
     def add_target_menu(self, menuitem):
         """ Add Menu Item Clicked """
         self.add_target(None)
-   
+
     def add_target(self, button):
         response = self.addedit_dialog.run_add()
 
@@ -578,14 +610,14 @@ class IetView(object):
         saved = self.addedit_dialog.saved.get_active()
         tid = self.get_next_tid()
         self.add_target_from_dialog(tid, active, saved, self.addedit_dialog)
-   
+
         self.commit_files()
         self.reload_sessions()
 
     def edit_target_menu(self, menuitem):
         """ Edit Menu Item Clicked """
         self.edit_target(None)
-     
+
     def edit_target_activate(self, tree, path, col):
         """ Double click triggers an edit """
         self.edit_target(None)
@@ -594,7 +626,7 @@ class IetView(object):
         path, col = self.target_list.get_cursor()
         if path == None:
             return
-        
+
         if len(path) != 2:
             return
 
@@ -622,7 +654,7 @@ class IetView(object):
             else:
                 conf = None
                 saved = False
- 
+
         if target in self.iet_allow.targets:
             allow = self.iet_allow.targets[target]
         else:
@@ -634,7 +666,7 @@ class IetView(object):
             deny = []
 
         old = iet_target.IetTarget(tname=target, active=active, saved=saved,
-                session=session, vol=vol, allow=allow, deny=deny, conf=conf) 
+                session=session, vol=vol, allow=allow, deny=deny, conf=conf)
 
         response = self.addedit_dialog.run_edit(active=active, vol=vol,
                 allow=allow, deny=deny, conf=conf, session=session)
@@ -690,25 +722,25 @@ class IetView(object):
         self.reload_sessions()
 
     def show_lun_details(self, lun, buf):
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
                                         '\tLUN ID: ', 'Bold')
 
         buf.insert(buf.get_end_iter(), str(lun.number) + '\n')
 
-        buf.insert_with_tags_by_name(buf.get_end_iter(), 
+        buf.insert_with_tags_by_name(buf.get_end_iter(),
                                         '\tIO Type: ', 'Bold')
 
         buf.insert(buf.get_end_iter(), lun.iotype + '\n')
         buf.insert_with_tags_by_name(buf.get_end_iter(),
                                         '\tPath: ', 'Bold')
-        
+
         buf.insert(buf.get_end_iter(), lun.path + '\n')
 
         for option in ['SCSI ID', 'SCSI SN', 'IO Mode', 'State']:
             key = option.replace(' ', '').lower()
 
             if key in lun.options:
-                buf.insert_with_tags_by_name(buf.get_end_iter(), 
+                buf.insert_with_tags_by_name(buf.get_end_iter(),
                                             '\t%s: ' % option, 'Bold')
                 buf.insert(buf.get_end_iter(), str(lun.options[key]) + '\n')
 
@@ -823,7 +855,7 @@ class IetView(object):
         buf = gtk.TextBuffer()
         buf.create_tag('Bold', weight=pango.WEIGHT_BOLD)
         buf.create_tag('Heading', scale=pango.SCALE_X_LARGE,
-                                  weight=pango.WEIGHT_BOLD, 
+                                  weight=pango.WEIGHT_BOLD,
                                   variant=pango.VARIANT_SMALL_CAPS)
 
         buf.create_tag('Heading2', scale=pango.SCALE_LARGE)
@@ -841,7 +873,7 @@ class IetView(object):
 
         buf.insert_with_tags_by_name(buf.get_end_iter(), 'IP: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.ip + '\n')
-        
+
         buf.insert_with_tags_by_name(buf.get_end_iter(),
                                      'Connection State: ', 'Bold')
         buf.insert(buf.get_end_iter(), client.state + '\n')
@@ -951,10 +983,10 @@ class IetView(object):
         path, col = target_list.get_cursor()
         edit_menu = self.wTree.get_widget('edit_menu_item')
         delete_menu = self.wTree.get_widget('delete_menu_item')
-        
+
         if path == None:
             return
-        
+
         if len(path) == 1:
             # Clicked on Active Targets or Disabled targets
             self.delete_button.set_sensitive(False)
@@ -1021,7 +1053,7 @@ class IetView(object):
             button.set_label('Yes')
         else:
             button.set_label('No')
- 
+
     def allowdeny_menu(self, menuitem):
         allowdeny_menu = self.wTree.get_widget('global_allowdeny_dialog')
 
@@ -1245,6 +1277,66 @@ class IetView(object):
         about.set_name('IETView')
         about.run()
         about.hide()
+
+    def path_belong(self, path):
+        vols = self.ietv.volumes
+
+        belongs = {}
+        for vid in vols:
+            lun_ids = vols[vid].get_lun_ids_by_path(path)
+            if len(lun_ids) > 0:
+                belongs[vols[vid].target] = lun_ids
+
+        for v in self.ietc.inactive_targets.itervalues():
+            lun_ids = v.get_lun_ids_by_path(path)
+            if len(lun_ids) > 0:
+                belongs[v.name] = lun_ids
+
+        return belongs
+
+    def get_dup_paths(self):
+        def get_all_path():
+            volumes = self.ietv.volumes
+            paths = []
+
+
+            for key in volumes:
+                luns = volumes[key].luns
+                paths.extend([luns[i].path for i in luns])
+
+            for v in self.ietc.inactive_targets.itervalues():
+                luns = v.luns
+                paths.extend([luns[i].path for i in luns])
+
+            return paths
+        all_paths = get_all_path()
+        dup_paths = list(set([p for p in all_paths if all_paths.count(p)>1]))
+        return dup_paths
+
+    def analyze_path(self, menuitem):
+        def get_target_name(id):
+            return self.ietv.volumes[id]
+
+        dup_paths = self.get_dup_paths()
+
+        message_text = "The lun paths are ok."
+
+        if len(dup_paths) > 0:
+            dup_data = {p: self.path_belong(p) for p in dup_paths}
+
+            template_string = ''
+            with open(self.dup_path,'r') as f:
+                template_string= f.read()
+            template = Template(template_string)
+            message_text = template.render(datas=dup_data)
+
+        msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
+                type = gtk.MESSAGE_WARNING,
+                buttons = gtk.BUTTONS_CLOSE,
+                message_format = message_text.strip())
+        response = msg.run()
+        msg.destroy()
+
 
 if __name__ == '__main__':
     iet_view = IetView()

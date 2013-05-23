@@ -1,0 +1,3 @@
+{% for path,targets in datas.iteritems() %}{{ path }} is used by mutiple luns:
+{% for target,luns in targets.iteritems() %}{% for lun in luns %}
+{{ target }}: lun {{ lun }}{% endfor %} {% endfor %} {% endfor %}

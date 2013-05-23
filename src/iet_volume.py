@@ -28,9 +28,15 @@ class IetVolume(object):
     def add_lun(self, lun):
         self.luns[lun.number] = lun
 
+    def get_lun_ids_by_path(self, path):
+        luns = self.luns
+        return [key for key in luns if path==luns[key].path]
+
+
+#Get running volumes from volumes file
 class IetVolumes(object):
     TARGET_REGEX='tid:(?P<tid>\d+)\s+name:(?P<target>.+)'
-    LUN_REGEX='lun:(?P<lun>\d+)\s+state:(?P<state>\d+)\s+iotype:(?P<iotype>\w+)\s+iomode:(?P<iomode>\w+)\s+path:(?P<path>.+)'
+    LUN_REGEX='lun:(?P<lun>\d+)\s+state:(?P<state>\d+)\s+iotype:(?P<iotype>\w+)\s+iomode:(?P<iomode>\w+)\s+blocks:(?P<blocks>\d+)\s+blocksize:(?P<blocksize>\d+)\s+path:(?P<path>.+)'
     def __init__(self, filename):
         self.volumes = {}
         self.filename = filename
@@ -45,8 +51,8 @@ class IetVolumes(object):
             if m:
                 tv = IetVolume(int(m.group('tid')), m.group('target'))
                 self.volumes[tv.tid] = tv
-        
-            m = re.search(self.LUN_REGEX, line) 
+
+            m = re.search(self.LUN_REGEX, line)
 
             if m:
                 tv.add_lun(iet_target.IetLun(number=int(m.group('lun')),

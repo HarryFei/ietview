@@ -26,9 +26,12 @@ class IetConfTarget(object):
 
         for kw, val in kwargs.iteritems():
             self.options[kw] = val
-        
+
     def add_lun(self, number, path, iotype, **kwargs):
         self.luns[number] = iet_target.IetLun(number, path, iotype, **kwargs)
+    def get_lun_ids_by_path(self, path):
+        luns = self.luns
+        return [key for key in luns if path==luns[key].path]
 
     def add_user(self, uname, passwd):
         self.users[uname] = passwd
@@ -49,7 +52,7 @@ class IetConfTarget(object):
             if key != 'OutgoingUser':
                 f.write('%s\t%s %s\n' % (prepend, key, val))
             else:
-                f.write('%s\t%s %s\n' % 
+                f.write('%s\t%s %s\n' %
                         (prepend, key, ' '.join(val.split('/'))))
 
 class IetConfFile(object):
@@ -123,7 +126,7 @@ class IetConfFile(object):
 
         f.write('\n')
 
-        f.write('# Global discovery users\n')    
+        f.write('# Global discovery users\n')
         for user, passwd in self.users.iteritems():
             f.write('IncomingUser %s %s\n' % (user, passwd))
 
@@ -150,7 +153,7 @@ class IetConfFile(object):
         # state = -1: haven't seen a target yet
         # state = 0: active (uncommented) target
         # state = 1: inactive (commented) target
-        state = -1 
+        state = -1
         current_target = None
 
         #TODO: Deal with split lines.
@@ -181,12 +184,12 @@ class IetConfFile(object):
                         m.group('path'), m.group('iotype'))
 
                 new_lun.add_options(m.group('options'))
-        
+
                 current_target.luns[new_lun.number] = new_lun
-        
+
                 continue
-        
-                   
+
+
             m = re.search(self.IN_USERPASS_REGEX, line)
             if m:
                 if current_target:
@@ -195,7 +198,7 @@ class IetConfFile(object):
                     self.users[m.group('uname')] = m.group('pass')
 
                 continue
- 
+
             m = re.search(self.OUT_USERPASS_REGEX, line)
             if m:
                 if current_target:
@@ -218,7 +221,7 @@ class IetConfFile(object):
                     self.options[m.group('key')] = m.group('value')
 
                 continue
-        
+
         f.close()
 
     def update(self, target, diff):
