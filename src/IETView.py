@@ -95,7 +95,6 @@ class IetView(object):
                 gtk.gdk.keyval_from_name('F5'),
                 0, gtk.ACCEL_VISIBLE)
 
-
         self.target_store = gtk.TreeStore(str, str, str, str, str)
 
         self.target_list = self.wTree.get_widget('session_tree')
@@ -123,6 +122,8 @@ class IetView(object):
         self.delete_button.set_sensitive(False)
 
         self.addedit_dialog = target_addedit.TargetAddEdit(self.wTree)
+
+        self.addedit_dialog.set_path_check_cb(self.check_lun_path)
 
         # Set up Global Users list
         globaluser_list = self.wTree.get_widget('globaluser_list')
@@ -256,6 +257,14 @@ class IetView(object):
 
         self.tooltips = gtk.Tooltips()
 
+        self.check_priviedge()
+        self.backup_files()
+        self.reload_sessions()
+
+    def run(self):
+        gtk.main()
+
+    def check_priviedge(self):
         # Check that we have root privledges
         if os.geteuid() != 0:
             msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -267,16 +276,14 @@ class IetView(object):
 
             response = msg.run()
             msg.destroy()
-
-        self.backup_files()
-        self.reload_sessions()
-
-    def run(self):
-        gtk.main()
+            sys.exit(1)
 
     def refresh_menu(self, menuitem):
         self.reload_sessions()
 
+    def lun_dialog_ok(self, menuitem):
+        print "fdasfdl"
+        self.addedit_dialog.lun_dialog_ok(menuitem)
     def reload_sessions(self):
         path, col = self.target_list.get_cursor()
         if path != None and len(path) in [2, 3]:
@@ -1299,7 +1306,6 @@ class IetView(object):
             volumes = self.ietv.volumes
             paths = []
 
-
             for key in volumes:
                 luns = volumes[key].luns
                 paths.extend([luns[i].path for i in luns])
@@ -1323,12 +1329,22 @@ class IetView(object):
 
         if len(dup_paths) > 0:
             dup_data = {p: self.path_belong(p) for p in dup_paths}
+            show_path_confict_dialog(dup_data)
+        else:
+            msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
+                    type = gtk.MESSAGE_WARNING,
+                    buttons = gtk.BUTTONS_CLOSE,
+                    message_format = message_text.strip())
+            response = msg.run()
+            msg.destroy()
 
-            template_string = ''
-            with open(self.dup_path,'r') as f:
-                template_string= f.read()
-            template = Template(template_string)
-            message_text = template.render(datas=dup_data)
+    def show_path_confict_dialog(self, data):
+        dup_data = data
+        template_string = ''
+        with open(self.dup_path,'r') as f:
+            template_string= f.read()
+        template = Template(template_string)
+        message_text = template.render(datas=dup_data)
 
         msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
                 type = gtk.MESSAGE_WARNING,
@@ -1336,6 +1352,31 @@ class IetView(object):
                 message_format = message_text.strip())
         response = msg.run()
         msg.destroy()
+
+    def check_lun_path(self, path):
+        def get_all_path():
+            volumes = self.ietv.volumes
+            paths = []
+
+            for key in volumes:
+                luns = volumes[key].luns
+                paths.extend([luns[i].path for i in luns])
+
+            for v in self.ietc.inactive_targets.itervalues():
+                luns = v.luns
+                paths.extend([luns[i].path for i in luns])
+
+            return paths
+        all_paths = get_all_path()
+        all_paths.append(path)
+        dup_paths = list(set([p for p in all_paths if all_paths.count(p)>1]))
+
+        if len(dup_paths)>0:
+            dup_data = {p: self.path_belong(p) for p in dup_paths}
+            self.show_path_confict_dialog(dup_data)
+            return False
+        else:
+            return True
 
 
 if __name__ == '__main__':

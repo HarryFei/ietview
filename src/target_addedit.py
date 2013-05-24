@@ -191,6 +191,8 @@ class TargetAddEdit(object):
         allow_delete = self.wTree.get_widget('allow_delete')
         allow_delete.connect('clicked', self.delete_allowdeny, self.allow_list)
 
+        self.path_check_cb = None
+
     def run_add(self):
         self.tname.set_text('')
         self.tname.grab_focus()
@@ -259,7 +261,7 @@ class TargetAddEdit(object):
                 self.option_store.append([key, val])
 
             luns = conf.luns
-            
+
         self.lun_store.clear()
         for lun in luns.itervalues():
             scsiid = ''
@@ -269,13 +271,13 @@ class TargetAddEdit(object):
             if conf and lun.number in conf.luns:
                 if 'scsiid' in conf.luns[lun.number].options:
                     scsiid = conf.luns[lun.number].options['scsiid']
-                
+
                 if 'scsisn' in conf.luns[lun.number].options:
                     scsisn = conf.luns[lun.number].options['scsisn']
-    
+
                 if 'iomode' in conf.luns[lun.number].options:
                     iomode = conf.luns[lun.number].options['iomode']
-    
+
             self.lun_store.append([lun.number, lun.path, lun.iotype,
                                    scsiid, scsisn, iomode])
 
@@ -364,10 +366,16 @@ class TargetAddEdit(object):
         scsisn_check.set_active(False)
         iomode_check.set_active(False)
 
-        response = lun_addedit.run()
-        lun_addedit.hide()
 
-        if response == 1:
+        while lun_addedit.run() == 1:
+
+            new_path = lun_path.get_text()
+
+            if not self.path_check_cb(new_path):
+                continue
+
+            lun_addedit.hide()
+
             if lun_fileio.get_active():
                 type = 'fileio'
             else:
@@ -391,10 +399,12 @@ class TargetAddEdit(object):
             else:
                 iomode_str = ''
 
-            self.lun_store.append([ str(lun_id.get_value_as_int()), 
+            self.lun_store.append([ str(lun_id.get_value_as_int()),
                                     lun_path.get_text(),
                                     type, scsiid_str, scsisn_str, iomode_str ])
-        
+            break
+        lun_addedit.hide()
+
     def edit_lun_activate(self, treeview, path, col):
         return self.edit_lun(None)
 
@@ -461,10 +471,14 @@ class TargetAddEdit(object):
             radio_wb.set_sensitive(False)
             iomode_check.set_active(False)
 
-        response = lun_addedit.run()
-        lun_addedit.hide()
 
-        if response == 1:
+        while lun_addedit.run() == 1:
+
+            new_path = lun_path.get_text()
+
+            if new_path != new_path and not self.path_check_cb(new_path):
+                continue
+
             if lun_fileio.get_active():
                 type = 'fileio'
             else:
@@ -488,10 +502,13 @@ class TargetAddEdit(object):
             else:
                 iomode_str = ''
 
-            self.lun_store[path] = [ str(lun_id.get_value_as_int()), 
-                                     lun_path.get_text(), 
+            self.lun_store[path] = [ str(lun_id.get_value_as_int()),
+                                     lun_path.get_text(),
                                      type, scsiid_str, scsisn_str, iomode_str ]
- 
+            break
+
+        lun_addedit.hide()
+
     def delete_lun(self, button):
         path, col = self.lun_list.get_cursor()
         if path == None:
@@ -836,5 +853,8 @@ class TargetAddEdit(object):
             allowdeny_net.set_sensitive(False)
             allowdeny_mask.set_text('')
             allowdeny_mask.set_sensitive(False)
+
+    def set_path_check_cb(self, cb):
+        self.path_check_cb = cb
 
 
