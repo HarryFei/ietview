@@ -19,16 +19,11 @@ import sys
 import shutil
 import filecmp
 
-import pygtk
 import gtk
 import gtk.glade
 import pango
 
-import iet_session
-import iet_volume
-import iet_allowdeny
 import iet_target
-import iet_conf
 import ietadm
 import target_addedit
 
@@ -284,6 +279,7 @@ class IetView(object):
     def lun_dialog_ok(self, menuitem):
         print "fdasfdl"
         self.addedit_dialog.lun_dialog_ok(menuitem)
+
     def reload_sessions(self):
         path, col = self.target_list.get_cursor()
         if path != None and len(path) in [2, 3]:
@@ -293,35 +289,22 @@ class IetView(object):
 
         self.target_store.clear()
 
-        self.iets = iet_session.IetSessions(self.SESSION_PATH)
-        self.ietv = iet_volume.IetVolumes(self.VOLUME_PATH)
+        from target_manager import TargetManager
+        self.target_manager =  TargetManager(
+                self.SESSION_PATH,
+                self.VOLUME_PATH,
+                self.CONF_FILE_PATH,
+                self.INITIATORS_ALLOW_PATH,
+                self.INITIATORS_DENY_PATH
+                )
 
-        try:
-            self.iets.parse_file()
-            self.ietv.parse_file()
-        except IOError, inst:
-            msg_str = '%s could not be opened.  Verify that iSCSI ' \
-                      'Enterprise Target software is running correctly.\n' \
-                      % inst.filename
+        self.target_manager.parse_file()
 
-            msg = gtk.MessageDialog(flags = gtk.DIALOG_MODAL,
-                     type = gtk.MESSAGE_ERROR,
-                     buttons = gtk.BUTTONS_CLOSE,
-                     message_format = msg_str)
-
-            msg.run()
-            msg.destroy()
-
-        self.ietc = iet_conf.IetConfFile(self.CONF_FILE_PATH)
-        self.ietc.parse_file()
-
-        self.iet_allow = iet_allowdeny.IetAllowDeny(
-                                self.INITIATORS_ALLOW_PATH)
-        self.iet_allow.parse_file()
-
-        self.iet_deny = iet_allowdeny.IetAllowDeny(
-                                self.INITIATORS_DENY_PATH)
-        self.iet_deny.parse_file()
+        self.iets = self.target_manager.iets
+        self.ietv = self.target_manager.ietv
+        self.ietc = self.target_manager.ietc
+        self.iet_allow = self.target_manager.iet_allow
+        self.iet_deny = self.target_manager.iet_deny
 
         active_targets = self.target_store.append(None,
                                                   ['Active Targets', '',
@@ -543,21 +526,14 @@ class IetView(object):
             msg.destroy()
 
     def get_next_tid(self):
-        tids = []
 
-        for session in self.iets.sessions.itervalues():
-            tids.append(session.tid)
-
-        tids.sort()
+        tids = [session.tid for session in self.iets.sessions.itervalues()]
 
         next_tid = 1
-        for tid in tids:
-            if tid != next_tid:
+        while True:
+            if not next_tid in tids:
                 return next_tid
-
             next_tid += 1
-
-        return next_tid
 
     def add_target_from_dialog(self, tid, active, saved, dialog):
         tname = dialog.tname.get_text()
@@ -1285,50 +1261,15 @@ class IetView(object):
         about.run()
         about.hide()
 
-    def path_belong(self, path):
-        vols = self.ietv.volumes
-
-        belongs = {}
-        for vid in vols:
-            lun_ids = vols[vid].get_lun_ids_by_path(path)
-            if len(lun_ids) > 0:
-                belongs[vols[vid].target] = lun_ids
-
-        for v in self.ietc.inactive_targets.itervalues():
-            lun_ids = v.get_lun_ids_by_path(path)
-            if len(lun_ids) > 0:
-                belongs[v.name] = lun_ids
-
-        return belongs
-
-    def get_dup_paths(self):
-        def get_all_path():
-            volumes = self.ietv.volumes
-            paths = []
-
-            for key in volumes:
-                luns = volumes[key].luns
-                paths.extend([luns[i].path for i in luns])
-
-            for v in self.ietc.inactive_targets.itervalues():
-                luns = v.luns
-                paths.extend([luns[i].path for i in luns])
-
-            return paths
-        all_paths = get_all_path()
-        dup_paths = list(set([p for p in all_paths if all_paths.count(p)>1]))
-        return dup_paths
 
     def analyze_path(self, menuitem):
-        def get_target_name(id):
-            return self.ietv.volumes[id]
-
-        dup_paths = self.get_dup_paths()
+        all_paths = self.target_manager.get_all_lun_path()
+        dup_paths = list(set([p for p in all_paths if all_paths.count(p)>1]))
 
         message_text = "The lun paths are ok."
 
         if len(dup_paths) > 0:
-            dup_data = {p: self.path_belong(p) for p in dup_paths}
+            dup_data = {p: self.target_manager.path_belong(p) for p in dup_paths}
             show_path_confict_dialog(dup_data)
         else:
             msg = gtk.MessageDialog(flags = gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -1337,6 +1278,19 @@ class IetView(object):
                     message_format = message_text.strip())
             response = msg.run()
             msg.destroy()
+
+
+    def check_lun_path(self, path):
+        all_paths = self.target_manager.get_all_lun_path()
+        all_paths.append(path)
+        dup_paths = list(set([p for p in all_paths if all_paths.count(p)>1]))
+
+        if len(dup_paths)>0:
+            dup_data = {p: self.target_manager.path_belong(p) for p in dup_paths}
+            self.show_path_confict_dialog(dup_data)
+            return False
+        else:
+            return True
 
     def show_path_confict_dialog(self, data):
         dup_data = data
@@ -1352,31 +1306,6 @@ class IetView(object):
                 message_format = message_text.strip())
         response = msg.run()
         msg.destroy()
-
-    def check_lun_path(self, path):
-        def get_all_path():
-            volumes = self.ietv.volumes
-            paths = []
-
-            for key in volumes:
-                luns = volumes[key].luns
-                paths.extend([luns[i].path for i in luns])
-
-            for v in self.ietc.inactive_targets.itervalues():
-                luns = v.luns
-                paths.extend([luns[i].path for i in luns])
-
-            return paths
-        all_paths = get_all_path()
-        all_paths.append(path)
-        dup_paths = list(set([p for p in all_paths if all_paths.count(p)>1]))
-
-        if len(dup_paths)>0:
-            dup_data = {p: self.path_belong(p) for p in dup_paths}
-            self.show_path_confict_dialog(dup_data)
-            return False
-        else:
-            return True
 
 
 if __name__ == '__main__':
